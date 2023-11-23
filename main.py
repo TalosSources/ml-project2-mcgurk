@@ -1,66 +1,46 @@
 import torch
 from transformers import PerceiverForMultimodalAutoencoding
-from PIL import Image
-import tqdm
 import numpy as np
 
+import os
 
-# CONSTANTS? TODO
-SAMPLES_PER_PATCH = 16
-AUDIO_SAMPLES_PER_FRAME = 48000 // 25
 
-def autoencode_video(images, audio):
-  
-  # only create entire video once as inputs
-  inputs = {'image': torch.from_numpy(np.moveaxis(images, -1, 2)).float().to(device),
-          'audio': torch.from_numpy(audio).to(device),
-          'label': torch.zeros((images.shape[0], 700)).to(device)}
-  
-  nchunks = 128
-  reconstruction = {}
-  for chunk_idx in tqdm(range(nchunks)):
-        image_chunk_size = np.prod(images.shape[1:-1]) // nchunks
-        audio_chunk_size = audio.shape[1] // SAMPLES_PER_PATCH // nchunks
-        subsampling = {
-            'image': torch.arange(
-                image_chunk_size * chunk_idx, image_chunk_size * (chunk_idx + 1)),
-            'audio': torch.arange(
-                audio_chunk_size * chunk_idx, audio_chunk_size * (chunk_idx + 1)),
-            'label': None,
-        }
-        
-        # forward pass
-        with torch.no_grad():
-          outputs = model(inputs=inputs, subsampled_output_points=subsampling)
+import scipy.io.wavfile
 
-        output = {k:v.cpu() for k,v in outputs.logits.items()}
-        
-        reconstruction['label'] = output['label']
-        if 'image' not in reconstruction:
-          reconstruction['image'] = output['image']
-          reconstruction['audio'] = output['audio']
-        else:
-          reconstruction['image'] = torch.cat(
-              [reconstruction['image'], output['image']], dim=1)
-          reconstruction['audio'] = torch.cat(
-              [reconstruction['audio'], output['audio']], dim=1)
-          
-        del outputs
-        
-  # finally, reshape image and audio modalities back to original shape
-  reconstruction['image'] = torch.reshape(reconstruction['image'], images.shape)
-  reconstruction['audio'] = torch.reshape(reconstruction['audio'], audio.shape)
-  return reconstruction
+from utils import *
+
+
+
 
 
 
 
 # TODO : load some video
+video_names = list_ucf_videos()
+video_path = fetch_ucf_video(video_names[0])
 
+# Extract audio using FFMPEG and encode as pcm float wavfile (only format readable by scipy.io.wavfile).
+import os
+os.system(f"""ffmpeg -i "{video_path}"  -c copy  -f wav -map 0:a pcm_f32le -ar 48000 output.wav""") # TODO : Not that
+
+sample_rate, audio = scipy.io.wavfile.read("output.wav")
+if audio.dtype == np.int16:
+  audio = audio.astype(np.float32) / 2**15
+elif audio.dtype != np.float32:
+  raise ValueError('Unexpected datatype. Model expects sound samples to lie in [-1, 1]')
+
+video = load_video(video_path)
+
+
+#table([to_gif(video), play_audio(audio)])
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 model = PerceiverForMultimodalAutoencoding.from_pretrained("deepmind/multimodal-perceiver", low_cpu_mem_usage=True)
 model.to(device)
 
-reconstruction = autoencode_video(video[None, :16], audio[None, :16*AUDIO_SAMPLES_PER_FRAME, 0:1])
+reconstruction = autoencode_video(video[None, :16], audio[None, :16*AUDIO_SAMPLES_PER_FRAME, 0:1], model, device)
+
+save_gif(reconstruction["image"][0].numpy())
+play_audio(np.array(reconstruction["audio"][0].numpy()))
+
