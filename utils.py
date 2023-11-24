@@ -80,8 +80,8 @@ def save_gif(images, path='./animation.gif'):
   converted_images = np.clip(images * 255, 0, 255).astype(np.uint8)
   imageio.mimsave(path, converted_images, fps=25)
 
-def play_audio(data, sample_rate=48000):
-  scipy.io.wavfile.write('tmp_audio.wav', sample_rate, data)
+def save_audio(data, sample_rate=48000, path='audio.wav'):
+  scipy.io.wavfile.write(path, sample_rate, data)
 
 
 
