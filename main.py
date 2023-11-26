@@ -1,6 +1,6 @@
 import torch
-#from transformers import PerceiverForMultimodalAutoencoding
-from models import PerceiverForMultimodalAutoencoding
+from transformers import PerceiverForMultimodalAutoencoding
+#from models import PerceiverForMultimodalAutoencoding
 import numpy as np
 
 import os
@@ -10,16 +10,10 @@ import scipy.io.wavfile
 
 from utils import *
 
-import pickle
-with open("video_autoencoding_checkpoint.pystate", "rb") as f:
-  params = pickle.loads(f.read())
-with open("params_print.txt", "w") as pp:
-  pp.write(f"{params}")
 
-video, audio = load_video_and_audio(0)
+video, audio = load_video_and_audio(6000)
 
 
-#table([to_gif(video), play_audio(audio)])
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 

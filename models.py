@@ -70,6 +70,11 @@ Note that, by masking the classification label during evaluation (i.e. simply pr
 )
 class PerceiverForMultimodalAutoencoding(PerceiverPreTrainedModel):
     def __init__(self, config: PerceiverConfig):
+
+        config_print = open("config_print.txt", "w")
+        config_print.write(f"{config}")
+        config_print.close()
+
         super().__init__(config)
 
         n_audio_samples = config.num_frames * config.audio_samples_per_frame
@@ -183,10 +188,6 @@ class PerceiverForMultimodalAutoencoding(PerceiverPreTrainedModel):
                 "label": PerceiverClassificationPostprocessor(config, in_channels=config.output_num_channels),
             }
         )
-
-        config_print = open("config_print.txt", "w")
-        config_print.write(f"{config}")
-        config_print.close()
 
         self.perceiver = PerceiverModel(
             config,
