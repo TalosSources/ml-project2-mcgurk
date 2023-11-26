@@ -80,7 +80,7 @@ def save_gif(images, path='./animation.gif'):
   converted_images = np.clip(images * 255, 0, 255).astype(np.uint8)
   imageio.mimsave(path, converted_images, fps=25)
 
-def save_audio(data, sample_rate=48000, path='audio.wav'):
+def save_audio(data, sample_rate=48000, path='./audio.wav'):
   scipy.io.wavfile.write(path, sample_rate, data)
 
 
@@ -89,10 +89,10 @@ def autoencode_video(images, audio, model, device):
   
   # only create entire video once as inputs
   inputs = {'image': torch.from_numpy(np.moveaxis(images, -1, 2)).float().to(device),
-          'audio': torch.from_numpy(audio).to(device),
-          'label': torch.zeros((images.shape[0], 700)).to(device)}
+          'audio': torch.from_numpy(audio).to(device)}
+          #'label': torch.zeros((images.shape[0], 700)).to(device)}
   
-  nchunks = 128
+  nchunks = 128 
   reconstruction = {}
   for chunk_idx in tqdm(range(nchunks)):
         image_chunk_size = np.prod(images.shape[1:-1]) // nchunks
@@ -102,7 +102,7 @@ def autoencode_video(images, audio, model, device):
                 image_chunk_size * chunk_idx, image_chunk_size * (chunk_idx + 1)),
             'audio': torch.arange(
                 audio_chunk_size * chunk_idx, audio_chunk_size * (chunk_idx + 1)),
-            'label': None,
+            #'label': None,
         }
         
         # forward pass
@@ -111,7 +111,7 @@ def autoencode_video(images, audio, model, device):
 
         output = {k:v.cpu() for k,v in outputs.logits.items()}
         
-        reconstruction['label'] = output['label']
+        #reconstruction['label'] = output['label']
         if 'image' not in reconstruction:
           reconstruction['image'] = output['image']
           reconstruction['audio'] = output['audio']

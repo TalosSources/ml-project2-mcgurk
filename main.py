@@ -1,5 +1,6 @@
 import torch
-from transformers import PerceiverForMultimodalAutoencoding
+#from transformers import PerceiverForMultimodalAutoencoding
+from models import PerceiverForMultimodalAutoencoding
 import numpy as np
 
 import os
@@ -33,11 +34,11 @@ save_gif(video, path="before.gif")
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-model = PerceiverForMultimodalAutoencoding.from_pretrained("deepmind/multimodal-perceiver", low_cpu_mem_usage=False)
+model = PerceiverForMultimodalAutoencoding.from_pretrained("deepmind/multimodal-perceiver", low_cpu_mem_usage=False, ignore_mismatched_sizes=True)
 model.to(device)
 
 reconstruction = autoencode_video(video[None, :16], audio[None, :16*AUDIO_SAMPLES_PER_FRAME, 0:1], model, device)
 
 save_gif(reconstruction["image"][0].numpy(), path="after.gif")
-save_audio(np.array(reconstruction["audio"][0].numpy(), path="after.wav"))
+save_audio(np.array(reconstruction["audio"][0].numpy()), path="after.wav")
 
