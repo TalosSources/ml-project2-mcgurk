@@ -74,7 +74,6 @@ class PerceiverForMultimodalAutoencoding(PerceiverPreTrainedModel):
 
         n_audio_samples = config.num_frames * config.audio_samples_per_frame
 
-        #modalities preprocessors
         audio_preprocessor = PerceiverAudioPreprocessor(
             config,
             position_encoding_type="fourier",
@@ -87,6 +86,7 @@ class PerceiverForMultimodalAutoencoding(PerceiverPreTrainedModel):
             prep_type="patches",
             samples_per_patch=config.samples_per_patch,
         )
+
         image_preprocessor = PerceiverImagePreprocessor(
             config,
             position_encoding_type="fourier",
@@ -101,16 +101,18 @@ class PerceiverForMultimodalAutoencoding(PerceiverPreTrainedModel):
             temporal_downsample=1,
         )
 
+        label_preprocessor = PerceiverOneHotPreprocessor(config)
+
         input_preprocessor = PerceiverMultimodalPreprocessor(
             min_padding_size=4,
             modalities={
                 "audio": audio_preprocessor,
                 "image": image_preprocessor,
+                "label": label_preprocessor,
             },
-            mask_probs={"image": 0.0, "audio": 0.0},
+            mask_probs={"image": 0.0, "audio": 0.0, "label": 1.0},
         )
 
-        #modalities decoders
         image_decoder = PerceiverBasicVideoAutoencodingDecoder(
             config,
             # Autoencoding, don't pass inputs to the queries.
@@ -127,6 +129,7 @@ class PerceiverForMultimodalAutoencoding(PerceiverPreTrainedModel):
                 "concat_pos": True,
             },
         )
+
         audio_decoder = PerceiverBasicDecoder(
             config,
             # Autoencoding, don't pass inputs to the queries.
@@ -144,6 +147,19 @@ class PerceiverForMultimodalAutoencoding(PerceiverPreTrainedModel):
             },
         )
 
+        label_decoder = PerceiverClassificationDecoder(
+            config,
+            # Autoencoding, don't pass inputs to the queries.
+            concat_preprocessed_input=False,
+            use_query_residual=False,
+            position_encoding_only=True,
+            position_encoding_type="trainable",
+            trainable_position_encoding_kwargs={
+                "num_channels": config._label_trainable_num_channels,
+                "index_dims": 1,
+            },
+        )
+
         decoder = PerceiverMultimodalDecoder(
             config,
             # Autoencoding, don't pass inputs to the queries.
@@ -153,6 +169,7 @@ class PerceiverForMultimodalAutoencoding(PerceiverPreTrainedModel):
             modalities={
                 "audio": audio_decoder,
                 "image": image_decoder,
+                "label": label_decoder,
             },
             num_outputs=None,
             output_num_channels=config.output_num_channels,
@@ -163,8 +180,13 @@ class PerceiverForMultimodalAutoencoding(PerceiverPreTrainedModel):
             modalities={
                 "audio": PerceiverAudioPostprocessor(config, in_channels=config.output_num_channels),
                 "image": PerceiverProjectionPostprocessor(in_channels=config.output_num_channels, out_channels=3),
+                "label": PerceiverClassificationPostprocessor(config, in_channels=config.output_num_channels),
             }
         )
+
+        config_print = open("config_print.txt", "w")
+        config_print.write(f"{config}")
+        config_print.close()
 
         self.perceiver = PerceiverModel(
             config,
@@ -186,6 +208,7 @@ class PerceiverForMultimodalAutoencoding(PerceiverPreTrainedModel):
         head_mask: Optional[torch.Tensor] = None,
         output_attentions: Optional[bool] = None,
         output_hidden_states: Optional[bool] = None,
+        labels: Optional[torch.Tensor] = None,
         return_dict: Optional[bool] = None,
     ) -> Union[Tuple, PerceiverClassifierOutput]:
         r"""
@@ -248,6 +271,8 @@ class PerceiverForMultimodalAutoencoding(PerceiverPreTrainedModel):
         logits = outputs.logits if return_dict else outputs[0]
 
         loss = None
+        if labels is not None:
+            raise NotImplementedError("Multimodal autoencoding training is not yet supported")
 
         if not return_dict:
             output = (logits,) + outputs[2:]
@@ -260,4 +285,3 @@ class PerceiverForMultimodalAutoencoding(PerceiverPreTrainedModel):
             attentions=outputs.attentions,
             cross_attentions=outputs.cross_attentions,
         )
-

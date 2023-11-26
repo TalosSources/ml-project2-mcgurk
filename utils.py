@@ -76,6 +76,25 @@ def load_video(path, max_frames=0, resize=(224, 224)):
     cap.release()
   return np.array(frames) / 255.0
 
+def load_video_and_audio(index=0):
+  video_names = list_ucf_videos()
+  video_path = fetch_ucf_video(video_names[index])
+
+  # Extract audio using FFMPEG and encode as pcm float wavfile (only format readable by scipy.io.wavfile).
+  os.system(f"""ffmpeg -i "{video_path}"  -c copy  -f wav -map 0:a pcm_f32le -ar 48000 before.wav""") # TODO : Not that
+
+  sample_rate, audio = scipy.io.wavfile.read("before.wav")
+  if audio.dtype == np.int16:
+    audio = audio.astype(np.float32) / 2**15
+  elif audio.dtype != np.float32:
+    raise ValueError('Unexpected datatype. Model expects sound samples to lie in [-1, 1]')
+
+  video = load_video(video_path)
+  save_gif(video, path="before.gif")
+
+  return video, audio
+
+
 def save_gif(images, path='./animation.gif'):
   converted_images = np.clip(images * 255, 0, 255).astype(np.uint8)
   imageio.mimsave(path, converted_images, fps=25)
@@ -89,8 +108,8 @@ def autoencode_video(images, audio, model, device):
   
   # only create entire video once as inputs
   inputs = {'image': torch.from_numpy(np.moveaxis(images, -1, 2)).float().to(device),
-          'audio': torch.from_numpy(audio).to(device)}
-          #'label': torch.zeros((images.shape[0], 700)).to(device)}
+          'audio': torch.from_numpy(audio).to(device),
+          'label': torch.zeros((images.shape[0], 700)).to(device)}
   
   nchunks = 128 
   reconstruction = {}
@@ -102,7 +121,7 @@ def autoencode_video(images, audio, model, device):
                 image_chunk_size * chunk_idx, image_chunk_size * (chunk_idx + 1)),
             'audio': torch.arange(
                 audio_chunk_size * chunk_idx, audio_chunk_size * (chunk_idx + 1)),
-            #'label': None,
+           'label': None,
         }
         
         # forward pass
@@ -111,7 +130,7 @@ def autoencode_video(images, audio, model, device):
 
         output = {k:v.cpu() for k,v in outputs.logits.items()}
         
-        #reconstruction['label'] = output['label']
+        reconstruction['label'] = output['label']
         if 'image' not in reconstruction:
           reconstruction['image'] = output['image']
           reconstruction['audio'] = output['audio']

@@ -10,24 +10,13 @@ import scipy.io.wavfile
 
 from utils import *
 
+import pickle
+with open("video_autoencoding_checkpoint.pystate", "rb") as f:
+  params = pickle.loads(f.read())
+with open("params_print.txt", "w") as pp:
+  pp.write(f"{params}")
 
-
-# TODO : load some video
-video_names = list_ucf_videos()
-video_path = fetch_ucf_video(video_names[0])
-
-# Extract audio using FFMPEG and encode as pcm float wavfile (only format readable by scipy.io.wavfile).
-import os
-os.system(f"""ffmpeg -i "{video_path}"  -c copy  -f wav -map 0:a pcm_f32le -ar 48000 before.wav""") # TODO : Not that
-
-sample_rate, audio = scipy.io.wavfile.read("before.wav")
-if audio.dtype == np.int16:
-  audio = audio.astype(np.float32) / 2**15
-elif audio.dtype != np.float32:
-  raise ValueError('Unexpected datatype. Model expects sound samples to lie in [-1, 1]')
-
-video = load_video(video_path)
-save_gif(video, path="before.gif")
+video, audio = load_video_and_audio(0)
 
 
 #table([to_gif(video), play_audio(audio)])
@@ -37,8 +26,13 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 model = PerceiverForMultimodalAutoencoding.from_pretrained("deepmind/multimodal-perceiver", low_cpu_mem_usage=False, ignore_mismatched_sizes=True)
 model.to(device)
 
-reconstruction = autoencode_video(video[None, :16], audio[None, :16*AUDIO_SAMPLES_PER_FRAME, 0:1], model, device)
+sample_taken = 16
+reconstruction = autoencode_video(video[None, :sample_taken], audio[None, :sample_taken*AUDIO_SAMPLES_PER_FRAME, 0:1], model, device)
 
 save_gif(reconstruction["image"][0].numpy(), path="after.gif")
 save_audio(np.array(reconstruction["audio"][0].numpy()), path="after.wav")
+
+scores, indices = torch.topk(torch.softmax(reconstruction["label"], dim=1), k=5)
+for score, index in zip(scores[0], indices[0]):
+  print("%s: %s" % (model.config.id2label[index.item()], score.item()))
 
