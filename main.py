@@ -1,6 +1,6 @@
 import torch
-#from transformers import PerceiverForMultimodalAutoencoding
-from models import PerceiverForMultimodalAutoencoding
+from transformers import PerceiverForMultimodalAutoencoding
+#from models import PerceiverForMultimodalAutoencoding
 import numpy as np
 
 import os

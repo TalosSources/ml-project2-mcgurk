@@ -1,5 +1,4 @@
 PerceiverConfig {
-  "_label_trainable_num_channels": 1024,
   "_name_or_path": "deepmind/multimodal-perceiver",
   "architectures": [
     "PerceiverForMultimodalAutoencoding"
@@ -1426,7 +1425,6 @@ PerceiverConfig {
   "num_latents": 784,
   "num_self_attends_per_block": 8,
   "num_self_attention_heads": 8,
-  "output_num_channels": 512,
   "output_shape": [
     1,
     16,
@@ -1441,7 +1439,7 @@ PerceiverConfig {
     368,
     496
   ],
-  "transformers_version": "4.35.2",
+  "transformers_version": "4.19.2",
   "use_query_residual": true,
   "v_channels": null,
   "vocab_size": 262
