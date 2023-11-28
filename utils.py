@@ -26,7 +26,6 @@ _CACHE_DIR = tempfile.mkdtemp()
 unverified_context = ssl._create_unverified_context()
 
 # CONSTANTS? TODO
-SAMPLES_PER_PATCH = 16
 AUDIO_SAMPLES_PER_FRAME = 48000 // 25
 
 
@@ -76,9 +75,10 @@ def load_video(path, max_frames=0, resize=(224, 224)):
     cap.release()
   return np.array(frames) / 255.0
 
-def load_video_and_audio(index=0):
-  video_names = list_ucf_videos()
-  video_path = fetch_ucf_video(video_names[index])
+def load_video_and_audio(index=0, video_path=None):
+  if video_path is None:
+    video_names = list_ucf_videos()
+    video_path = fetch_ucf_video(video_names[index])
 
   # Extract audio using FFMPEG and encode as pcm float wavfile (only format readable by scipy.io.wavfile).
   os.system(f"""ffmpeg -i "{video_path}"  -c copy  -f wav -map 0:a pcm_f32le -ar 48000 before.wav""") # TODO : Not that
@@ -104,7 +104,7 @@ def save_audio(data, sample_rate=48000, path='./audio.wav'):
 
 
 
-def autoencode_video(images, audio, model, device):
+def autoencode_video(images, audio, model, device, SAMPLES_PER_PATCH=16):
   
   # only create entire video once as inputs
   inputs = {'image': torch.from_numpy(np.moveaxis(images, -1, 2)).float().to(device),
@@ -126,9 +126,10 @@ def autoencode_video(images, audio, model, device):
         
         # forward pass
         with torch.no_grad():
-          outputs = model(inputs=inputs, subsampled_output_points=subsampling)
+          outputs = model(inputs=inputs, subsampled_output_points=subsampling, return_dict=True, output_hidden_states=True)
 
         output = {k:v.cpu() for k,v in outputs.logits.items()}
+        last_hidden_states = outputs.last_hidden_states
         
         reconstruction['label'] = output['label']
         if 'image' not in reconstruction:
@@ -143,6 +144,6 @@ def autoencode_video(images, audio, model, device):
         del outputs
         
   # finally, reshape image and audio modalities back to original shape
-  reconstruction['image'] = torch.reshape(reconstruction['image'], images.shape)
-  reconstruction['audio'] = torch.reshape(reconstruction['audio'], audio.shape)
-  return reconstruction
+  #reconstruction['image'] = torch.reshape(reconstruction['image'], images.shape)
+  #reconstruction['audio'] = torch.reshape(reconstruction['audio'], audio.shape)
+  return reconstruction, last_hidden_states

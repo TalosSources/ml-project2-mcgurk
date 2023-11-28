@@ -278,6 +278,7 @@ class PerceiverForMultimodalAutoencoding(PerceiverPreTrainedModel):
             output = (logits,) + outputs[2:]
             return ((loss,) + output) if loss is not None else output
 
+
         return PerceiverClassifierOutput(
             loss=loss,
             logits=logits,
