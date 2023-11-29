@@ -129,7 +129,7 @@ def autoencode_video(images, audio, model, device, SAMPLES_PER_PATCH=16):
           outputs = model(inputs=inputs, subsampled_output_points=subsampling, return_dict=True, output_hidden_states=True)
 
         output = {k:v.cpu() for k,v in outputs.logits.items()}
-        last_hidden_states = outputs.last_hidden_states
+        last_hidden_state = outputs.hidden_states[-1]
         
         reconstruction['label'] = output['label']
         if 'image' not in reconstruction:
@@ -146,4 +146,4 @@ def autoencode_video(images, audio, model, device, SAMPLES_PER_PATCH=16):
   # finally, reshape image and audio modalities back to original shape
   #reconstruction['image'] = torch.reshape(reconstruction['image'], images.shape)
   #reconstruction['audio'] = torch.reshape(reconstruction['audio'], audio.shape)
-  return reconstruction, last_hidden_states
+  return reconstruction, last_hidden_state
