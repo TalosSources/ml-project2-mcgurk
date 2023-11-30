@@ -81,16 +81,17 @@ def load_video_and_audio(index=0, video_path=None):
     video_path = fetch_ucf_video(video_names[index])
 
   # Extract audio using FFMPEG and encode as pcm float wavfile (only format readable by scipy.io.wavfile).
-  os.system(f"""ffmpeg -i "{video_path}"  -c copy  -f wav -map 0:a pcm_f32le -ar 48000 before.wav""") # TODO : Not that
+  os.system(f"""ffmpeg -i "{video_path}"  -c copy  -f wav -map 0:a ffmpeg_tmp/pcm_f32le -ar 48000 ffmpeg_tmp/before.wav""") # TODO : Not that
 
-  sample_rate, audio = scipy.io.wavfile.read("before.wav")
+  sample_rate, audio = scipy.io.wavfile.read("ffmpeg_tmp/before.wav")
   if audio.dtype == np.int16:
     audio = audio.astype(np.float32) / 2**15
   elif audio.dtype != np.float32:
     raise ValueError('Unexpected datatype. Model expects sound samples to lie in [-1, 1]')
 
   video = load_video(video_path)
-  save_gif(video, path="before.gif")
+  #save_gif(video, path="before.gif")
+  os.system("rm ffmpeg_tmp/*")
 
   return video, audio
 
@@ -103,17 +104,22 @@ def save_audio(data, sample_rate=48000, path='./audio.wav'):
   scipy.io.wavfile.write(path, sample_rate, data)
 
 
+def average_latents(latents):
+  # expect a latent of shape (num_latents, latent_size)
+  after = torch.mean(latents, dim=1).reshape((512))
+  return after
 
-def autoencode_video(images, audio, model, device, SAMPLES_PER_PATCH=16):
+
+def autoencode_video(images, audio, model, device, SAMPLES_PER_PATCH=16, output_reconstruction=False):
   
   # only create entire video once as inputs
   inputs = {'image': torch.from_numpy(np.moveaxis(images, -1, 2)).float().to(device),
           'audio': torch.from_numpy(audio).to(device),
           'label': torch.zeros((images.shape[0], 700)).to(device)}
   
-  nchunks = 128 
+  nchunks = 128
   reconstruction = {}
-  for chunk_idx in tqdm(range(nchunks)):
+  for chunk_idx in tqdm(range(nchunks if output_reconstruction else 1)):
         image_chunk_size = np.prod(images.shape[1:-1]) // nchunks
         audio_chunk_size = audio.shape[1] // SAMPLES_PER_PATCH // nchunks
         subsampling = {
@@ -129,21 +135,25 @@ def autoencode_video(images, audio, model, device, SAMPLES_PER_PATCH=16):
           outputs = model(inputs=inputs, subsampled_output_points=subsampling, return_dict=True, output_hidden_states=True)
 
         output = {k:v.cpu() for k,v in outputs.logits.items()}
-        last_hidden_state = outputs.hidden_states[-1]
+        last_hidden_state = average_latents(outputs.hidden_states[-1])
         
-        reconstruction['label'] = output['label']
-        if 'image' not in reconstruction:
-          reconstruction['image'] = output['image']
-          reconstruction['audio'] = output['audio']
-        else:
-          reconstruction['image'] = torch.cat(
-              [reconstruction['image'], output['image']], dim=1)
-          reconstruction['audio'] = torch.cat(
-              [reconstruction['audio'], output['audio']], dim=1)
+        if output_reconstruction:
+          reconstruction['label'] = output['label']
+          if 'image' not in reconstruction:
+            reconstruction['image'] = output['image']
+            reconstruction['audio'] = output['audio']
+          else:
+            reconstruction['image'] = torch.cat(
+                [reconstruction['image'], output['image']], dim=1)
+            reconstruction['audio'] = torch.cat(
+                [reconstruction['audio'], output['audio']], dim=1)
           
         del outputs
         
+  if output_reconstruction:
   # finally, reshape image and audio modalities back to original shape
-  #reconstruction['image'] = torch.reshape(reconstruction['image'], images.shape)
-  #reconstruction['audio'] = torch.reshape(reconstruction['audio'], audio.shape)
-  return reconstruction, last_hidden_state
+    reconstruction['image'] = torch.reshape(reconstruction['image'], images.shape)
+    reconstruction['audio'] = torch.reshape(reconstruction['audio'], audio.shape)
+    return reconstruction
+  else:
+    return last_hidden_state
