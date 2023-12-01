@@ -2,4 +2,3 @@ __pycache__
 *.gif
 *.wav
 pcm_f32le
-saved_models
