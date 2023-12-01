@@ -42,7 +42,7 @@ class LogisticRegression(torch.nn.Module):
         # nothing else to do if we want a minimal thing
      
 
-def obtain_mc_gurk_last_latents(video_dir, device):
+def obtain_mc_gurk_last_latents(videos_paths, device):
 
     from transformers import PerceiverForMultimodalAutoencoding
     perceiver_model = PerceiverForMultimodalAutoencoding.from_pretrained("deepmind/multimodal-perceiver", low_cpu_mem_usage=False)
@@ -52,9 +52,8 @@ def obtain_mc_gurk_last_latents(video_dir, device):
     #last_latent should be of shape (latent_size) = 512
     latents = []
 
-    for video_path in sorted(os.listdir(video_dir)):
+    for video_path in videos_paths:
         print(f"video {video_path}")
-        video_path = os.path.join(video_dir, video_path)
         video, audio = load_video_and_audio(video_path=video_path)
 
         frames_taken = 16 # TODO : investigate this
@@ -87,20 +86,20 @@ def read_labels(label_path="labels.txt"):
 
 def training_pipeline(X_cache_path="X_cached.pt", 
                       labels_path='labels.txt', 
-                      video_dir=None, epochs=10, 
+                      videos_paths=None, epochs=10, 
                       learning_rate=0.0001,
                       X_save_path=None, 
                       device=None, 
                       model_save_path=None):
     
-    assert video_dir is not None or X_cache_path is not None
+    assert videos_paths is not None or X_cache_path is not None
     
     if device is None:
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    if video_dir is not None:
+    if videos_paths is not None:
 
-        X = obtain_mc_gurk_last_latents(video_dir, device)
+        X = obtain_mc_gurk_last_latents(videos_paths, device)
 
         if X_save_path is not None:
             torch.save(X, X_save_path)
