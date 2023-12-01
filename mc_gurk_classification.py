@@ -7,7 +7,7 @@ class LogisticRegression(torch.nn.Module):
      
     def __init__(self, input_dim, output_dim):
         super(LogisticRegression, self).__init__()
-        self.linear = torch.nn.Linear(input_dim, output_dim)
+        self.linear = torch.nn.Linear(input_dim, output_dim, bias=True)
     def forward(self, x):
         outputs = torch.softmax(self.linear(x), dim=-1)
         return outputs
