@@ -12,8 +12,8 @@
 #for stamp in frame_stamps:
 #    video.subclip()
 
-video_path = '../dataset_to_process/olena_da.mkv'
-frame_stamps_path = 'dataset/timestamps/olena_da_timestamps.txt'
+video_path = '../dataset_to_process/jad_ba.mkv'
+frame_stamps_path = 'dataset/timestamps/jad_ba_timestamps.txt'
 
 with open(frame_stamps_path) as csvfile:
     splitted_lines = [l.split(sep=',') for l in csvfile.readlines()]
@@ -23,4 +23,4 @@ print(time_stamps)
 import os
 
 for i, ts in enumerate(time_stamps):
-    os.system(f"ffmpeg -ss {ts} -i {video_path} -frames:v 60 -vf scale=224:224 -c:v ffv1 dataset/da/olena_da{i+1}.avi")
+    os.system(f"ffmpeg -ss {ts} -i {video_path} -frames:v 60 -vf scale=224:224 -c:v ffv1 dataset/ba/jad_ba{i+1}.avi")
