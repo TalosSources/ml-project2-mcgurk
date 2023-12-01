@@ -21,7 +21,7 @@ class LogisticRegression(torch.nn.Module):
     """
     def train_log_reg(self, X, Y, epochs=200000, learning_rate=0.01):
         criterion = torch.nn.CrossEntropyLoss()
-        optimizer = torch.optim.SGD(self.parameters(), lr=learning_rate)
+        optimizer = torch.optim.Adam(self.parameters(), lr=learning_rate)
 
         for iter in tqdm(range(epochs), desc='Training Epochs'):
 
@@ -40,7 +40,9 @@ class LogisticRegression(torch.nn.Module):
                 print(f"    loss={loss}")
 
         # nothing else to do if we want a minimal thing
-     
+
+def sorted_videos_paths(videos_dir):
+    return [os.path.join(videos_dir, video_path) for video_path in sorted(os.listdir(videos_dir))]     
 
 def obtain_mc_gurk_last_latents(videos_paths, device):
 
