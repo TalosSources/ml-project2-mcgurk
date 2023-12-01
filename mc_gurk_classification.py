@@ -101,12 +101,12 @@ def training_pipeline(X_cache_path="X_cached.pt",
 
     if videos_paths is not None:
 
-        X = obtain_mc_gurk_last_latents(videos_paths, device)
+        X = obtain_mc_gurk_last_latents(videos_paths, device).to(device)
 
         if X_save_path is not None:
             torch.save(X, X_save_path)
     else:
-        X = torch.load(X_cache_path)
+        X = torch.load(X_cache_path).to(device)
 
     N = X.size(0)
     D = X.size(1)
@@ -115,9 +115,10 @@ def training_pipeline(X_cache_path="X_cached.pt",
     #Y = torch.randint(0, C, size=(N,), device=device) # TODO : load label file from dataset
 
     C, Y = read_labels(labels_path)
+    Y = Y.to(device)
     print(f"got C = {C}, Y = {Y}")
 
-    classification_model = LogisticRegression(D, C)
+    classification_model = LogisticRegression(D, C).to(device)
     classification_model.train_log_reg(X, Y, epochs=epochs, learning_rate=learning_rate)
 
     for i in range(N):
