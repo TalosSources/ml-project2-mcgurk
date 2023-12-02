@@ -1,4 +1,6 @@
 test
-train
+train_sets
 cached_tensors
 ba_ga_da/
+mc_gurk/
+
