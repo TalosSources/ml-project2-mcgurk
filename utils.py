@@ -80,10 +80,12 @@ def load_video_and_audio(index=0, video_path=None):
     video_names = list_ucf_videos()
     video_path = fetch_ucf_video(video_names[index])
 
-  # Extract audio using FFMPEG and encode as pcm float wavfile (only format readable by scipy.io.wavfile).
-  os.system(f"""ffmpeg -i "{video_path}"  -c copy  -f wav -map 0:a ffmpeg_tmp/pcm_f32le -ar 48000 ffmpeg_tmp/before.wav""") # TODO : Not that
+  os.system("rm stuff/ffmpeg_tmp/*")
 
-  sample_rate, audio = scipy.io.wavfile.read("ffmpeg_tmp/before.wav")
+  # Extract audio using FFMPEG and encode as pcm float wavfile (only format readable by scipy.io.wavfile).
+  os.system(f"""ffmpeg -i "{video_path}"  -c copy  -f wav -map 0:a stuff/ffmpeg_tmp/pcm_f32le -ar 48000 stuff/ffmpeg_tmp/before.wav""") # TODO : Not that
+
+  sample_rate, audio = scipy.io.wavfile.read("stuff/ffmpeg_tmp/before.wav")
   if audio.dtype == np.int16:
     audio = audio.astype(np.float32) / 2**15
   elif audio.dtype != np.float32:
@@ -91,7 +93,7 @@ def load_video_and_audio(index=0, video_path=None):
 
   video = load_video(video_path)
   #save_gif(video, path="before.gif")
-  os.system("rm ffmpeg_tmp/*")
+  os.system("rm stuff/ffmpeg_tmp/*")
 
   return video, audio
 

@@ -42,13 +42,35 @@ class LogisticRegression(torch.nn.Module):
         # nothing else to do if we want a minimal thing
 
 def sorted_videos_paths(videos_dir):
-    return [os.path.join(videos_dir, video_path) for video_path in sorted(os.listdir(videos_dir))]     
+    return [os.path.join(videos_dir, video_path) for video_path in sorted(os.listdir(videos_dir))]
 
-def obtain_mc_gurk_last_latents(videos_paths, device):
+def obtain_latents_a_v_av(videos_paths, device):
 
-    from transformers import PerceiverForMultimodalAutoencoding
+    from models import PerceiverForMultimodalAutoencoding
     perceiver_model = PerceiverForMultimodalAutoencoding.from_pretrained("deepmind/multimodal-perceiver", low_cpu_mem_usage=False)
     perceiver_model.to(device)
+    
+    perceiver_model.perceiver.input_preprocessor.mask_probs = {"image": 1.0, "audio": 0.0, "label": 1.0}
+    X_a = obtain_mc_gurk_last_latents(videos_paths, device, perceiver_model=perceiver_model)
+
+    perceiver_model.perceiver.input_preprocessor.mask_probs = {"image": 0.0, "audio": 1.0, "label": 1.0}
+    X_v = obtain_mc_gurk_last_latents(videos_paths, device, perceiver_model=perceiver_model)
+
+    perceiver_model.perceiver.input_preprocessor.mask_probs = {"image": 0.0, "audio": 0.0, "label": 1.0}
+    X_av = obtain_mc_gurk_last_latents(videos_paths, device, perceiver_model=perceiver_model)
+
+    X_a_v_av = torch.cat((X_a, X_v, X_av))
+    assert X_a_v_av.size() == (3 * len(videos_paths), 512)
+
+    return X_a_v_av
+
+
+def obtain_mc_gurk_last_latents(videos_paths, device, perceiver_model=None):
+
+    if perceiver_model is None:
+        from models import PerceiverForMultimodalAutoencoding
+        perceiver_model = PerceiverForMultimodalAutoencoding.from_pretrained("deepmind/multimodal-perceiver", low_cpu_mem_usage=False)
+        perceiver_model.to(device)
     
     #big last_latents array X that will contain 128 video_paths.length latents, one for each video
     #last_latent should be of shape (latent_size) = 512

@@ -12,12 +12,10 @@
 #for stamp in frame_stamps:
 #    video.subclip()
 
-#video_path = '../dataset_to_process/olena_ba.mkv'
-#frame_stamps_path = 'dataset/timestamps/olena_ba_timestamps.txt'
-video_path = 'da_test.mp4'
-frame_stamps_path = 'fs.txt'
+video_path = '../dataset_to_process/olena_bga.mkv'
+time_stamps_path = 'dataset/timestamps/olena_bga_timestamps.txt'
 
-with open(frame_stamps_path) as csvfile:
+with open(time_stamps_path) as csvfile:
     splitted_lines = [l.split(sep=',') for l in csvfile.readlines()]
 time_stamps = [(float(splits[0]) + float(splits[1]) / 30) for splits in splitted_lines]
 print(time_stamps)
@@ -25,4 +23,4 @@ print(time_stamps)
 import os
 
 for i, ts in enumerate(time_stamps):
-    os.system(f"ffmpeg -ss {ts} -i {video_path} -frames:v 60 -vf scale=224:224 -c:v ffv1 da_test{i+1}.avi")
+    os.system(f"ffmpeg -ss {ts} -i {video_path} -frames:v 60 -vf scale=224:224 -c:v ffv1 dataset/bga/olena_bga{i+1}.avi")
