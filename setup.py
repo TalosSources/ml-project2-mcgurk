@@ -17,8 +17,8 @@ with zipfile.ZipFile(output, "r") as zip_ref:
     zip_ref.extractall("./dataset/raw/videos/")
 
 # Remove the zip file
-# import os
-# os.remove(output)
+import os
+os.remove(output)
 
 # Generate samples from the raw dataset
 # Pair csv files with mkv videos of the same name
@@ -43,7 +43,7 @@ for csv_file in csv_files:
 from tqdm import tqdm
 
 for csv_file, mkv_file in tqdm(
-    csv_mkv_pairs, desc="Splitting raw videos into samples", position=1, leave=False
+    csv_mkv_pairs, desc="Splitting raw videos into training samples", position=1, leave=False
 ):
     # Read the timestamps
     with open(csv_file) as csvfile:
