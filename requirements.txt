@@ -1,0 +1,4 @@
+gdown # To download the dataset
+transformers # To use the PerceiverIO model
+tqdm # To show progress bars
+torch # PyTorch
