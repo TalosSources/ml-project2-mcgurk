@@ -1,7 +1,7 @@
-#=============================IMPORTS=============================#
+# =============================IMPORTS=============================#
 from transformers import PerceiverPreTrainedModel
 from transformers.models.perceiver.modeling_perceiver import (
-    PerceiverMultimodalPostprocessor, 
+    PerceiverMultimodalPostprocessor,
     PerceiverMultimodalPreprocessor,
     PerceiverAudioPreprocessor,
     PerceiverImagePreprocessor,
@@ -17,7 +17,7 @@ from transformers.models.perceiver.modeling_perceiver import (
     PerceiverClassifierOutput,
     PERCEIVER_INPUTS_DOCSTRING,
     PERCEIVER_START_DOCSTRING,
-    _CONFIG_FOR_DOC
+    _CONFIG_FOR_DOC,
 )
 
 from dataclasses import dataclass
@@ -34,8 +34,8 @@ from transformers.utils import (
     replace_return_docstrings,
 )
 from transformers.models.perceiver.configuration_perceiver import PerceiverConfig
-#=================================================================#
 
+# =================================================================#
 
 
 @add_start_docstrings(
@@ -70,7 +70,6 @@ Note that, by masking the classification label during evaluation (i.e. simply pr
 )
 class PerceiverForMultimodalAutoencoding(PerceiverPreTrainedModel):
     def __init__(self, config: PerceiverConfig):
-
         super().__init__(config)
 
         n_audio_samples = config.num_frames * config.audio_samples_per_frame
@@ -93,7 +92,11 @@ class PerceiverForMultimodalAutoencoding(PerceiverPreTrainedModel):
             position_encoding_type="fourier",
             fourier_position_encoding_kwargs={
                 "num_bands": 32,
-                "max_resolution": (config.num_frames, config.image_size, config.image_size),
+                "max_resolution": (
+                    config.num_frames,
+                    config.image_size,
+                    config.image_size,
+                ),
                 "sine_only": False,
                 "concat_pos": True,
             },
@@ -125,7 +128,11 @@ class PerceiverForMultimodalAutoencoding(PerceiverPreTrainedModel):
             position_encoding_type="fourier",
             fourier_position_encoding_kwargs={
                 "num_bands": 32,
-                "max_resolution": (config.num_frames, config.image_size, config.image_size),
+                "max_resolution": (
+                    config.num_frames,
+                    config.image_size,
+                    config.image_size,
+                ),
                 "sine_only": False,
                 "concat_pos": True,
             },
@@ -179,9 +186,15 @@ class PerceiverForMultimodalAutoencoding(PerceiverPreTrainedModel):
 
         output_postprocessor = PerceiverMultimodalPostprocessor(
             modalities={
-                "audio": PerceiverAudioPostprocessor(config, in_channels=config.output_num_channels),
-                "image": PerceiverProjectionPostprocessor(in_channels=config.output_num_channels, out_channels=3),
-                "label": PerceiverClassificationPostprocessor(config, in_channels=config.output_num_channels),
+                "audio": PerceiverAudioPostprocessor(
+                    config, in_channels=config.output_num_channels
+                ),
+                "image": PerceiverProjectionPostprocessor(
+                    in_channels=config.output_num_channels, out_channels=3
+                ),
+                "label": PerceiverClassificationPostprocessor(
+                    config, in_channels=config.output_num_channels
+                ),
             }
         )
 
@@ -195,8 +208,12 @@ class PerceiverForMultimodalAutoencoding(PerceiverPreTrainedModel):
         # Initialize weights and apply final processing
         self.post_init()
 
-    @add_start_docstrings_to_model_forward(PERCEIVER_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
-    @replace_return_docstrings(output_type=PerceiverClassifierOutput, config_class=_CONFIG_FOR_DOC)
+    @add_start_docstrings_to_model_forward(
+        PERCEIVER_INPUTS_DOCSTRING.format("batch_size, sequence_length")
+    )
+    @replace_return_docstrings(
+        output_type=PerceiverClassifierOutput, config_class=_CONFIG_FOR_DOC
+    )
     def forward(
         self,
         inputs: Optional[torch.Tensor] = None,
@@ -254,7 +271,9 @@ class PerceiverForMultimodalAutoencoding(PerceiverPreTrainedModel):
         >>> list(logits["label"].shape)
         [1, 700]
         ```"""
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
 
         outputs = self.perceiver(
             inputs=inputs,
@@ -269,12 +288,13 @@ class PerceiverForMultimodalAutoencoding(PerceiverPreTrainedModel):
 
         loss = None
         if labels is not None:
-            raise NotImplementedError("Multimodal autoencoding training is not yet supported")
+            raise NotImplementedError(
+                "Multimodal autoencoding training is not yet supported"
+            )
 
         if not return_dict:
             output = (logits,) + outputs[2:]
             return ((loss,) + output) if loss is not None else output
-
 
         return PerceiverClassifierOutput(
             loss=loss,
