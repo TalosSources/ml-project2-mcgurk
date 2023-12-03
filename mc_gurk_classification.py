@@ -108,13 +108,14 @@ def read_labels(label_path="labels.txt"):
     
  
 
-def training_pipeline(X_cache_path="X_cached.pt", 
+def training_pipeline(X_cache_path=None, 
                       labels_path='labels.txt', 
                       videos_paths=None, epochs=10, 
                       learning_rate=0.0001,
                       X_save_path=None, 
                       device=None, 
-                      model_save_path=None):
+                      model_save_path=None,
+                      train_with_masks=True):
     
     assert videos_paths is not None or X_cache_path is not None
     
@@ -123,7 +124,7 @@ def training_pipeline(X_cache_path="X_cached.pt",
 
     if videos_paths is not None:
 
-        X = obtain_mc_gurk_last_latents(videos_paths, device).to(device)
+        X = obtain_latents_a_v_av(videos_paths, device).to(device) if train_with_masks else obtain_mc_gurk_last_latents(videos_paths, device).to(device)
 
         if X_save_path is not None:
             torch.save(X, X_save_path)
@@ -133,9 +134,6 @@ def training_pipeline(X_cache_path="X_cached.pt",
     N = X.size(0)
     D = X.size(1)
 
-    #C = 2 # TODO : load class count from somewhere, surely label file also, or maybe something like numpy.distinct
-    #Y = torch.randint(0, C, size=(N,), device=device) # TODO : load label file from dataset
-
     C, Y = read_labels(labels_path)
     Y = Y.to(device)
     print(f"got C = {C}, Y = {Y}")
@@ -143,13 +141,18 @@ def training_pipeline(X_cache_path="X_cached.pt",
     classification_model = LogisticRegression(D, C).to(device)
     classification_model.train_log_reg(X, Y, epochs=epochs, learning_rate=learning_rate)
 
-    for i in range(N):
-        x = X[i]
-        y = Y[i]
-        prediction = classification_model(x)
-        print(f"prediction : {prediction}, ground_truth : {y}")
-
     if model_save_path is not None:
         torch.save(classification_model, model_save_path)
 
-    return classification_model
+    predictions = classification_model(X) # size = (N, 3)
+    predicted_labels = torch.argmax(predictions, dim=1)
+    Y_labels = torch.argmax(Y, dim=1)
+
+    correct = predicted_labels == Y_labels
+    accuracy = correct.sum() / N
+
+    print(f"\n\n=================================================\n\n")
+    print(f"    FINAL TRAIN ACCURACY:")
+    print(f"    {accuracy * 100}%")
+
+    return classification_model, X, Y, accuracy

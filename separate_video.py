@@ -1,19 +1,8 @@
-#from moviepy.editor import *
-#
-#video_path = '../dataset_to_process/ismail_ba.mkv'
-#frame_stamps_path = 'time_stamps.txt'
-#
-#with open(frame_stamps_path) as csvfile:
-#    splitted_lines = [l.split(sep=',') for l in csvfile.readlines()]
-#frame_stamps = [splits[0] * 30 + splits[1] for splits in splitted_lines]
-#
-#video = VideoFileClip(video_path)
-#
-#for stamp in frame_stamps:
-#    video.subclip()
+person = 'jad'
+syllable = 'va'
 
-video_path = '../dataset_to_process/olena_bga.mkv'
-time_stamps_path = 'dataset/timestamps/olena_bga_timestamps.txt'
+video_path = f'../dataset_to_process/{person}_{syllable}.mkv'
+time_stamps_path = f'dataset/timestamps/{person}_{syllable}_timestamps.txt'
 
 with open(time_stamps_path) as csvfile:
     splitted_lines = [l.split(sep=',') for l in csvfile.readlines()]
@@ -23,4 +12,4 @@ print(time_stamps)
 import os
 
 for i, ts in enumerate(time_stamps):
-    os.system(f"ffmpeg -ss {ts} -i {video_path} -frames:v 60 -vf scale=224:224 -c:v ffv1 dataset/bga/olena_bga{i+1}.avi")
+    os.system(f"ffmpeg -ss {ts} -i {video_path} -frames:v 60 -vf scale=224:224 -c:v ffv1 dataset/syllables/{syllable}/{person}_{syllable}{i+1}.avi")
