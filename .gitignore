@@ -1,4 +1,14 @@
+# Python cache
 __pycache__
+
+# Raw dataset
+*.zip
+*.mkv
+
+# Intermediate files
 *.gif
 *.wav
 pcm_f32le
+
+# Processed dataset
+*.avi
