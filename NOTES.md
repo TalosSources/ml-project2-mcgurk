@@ -1,3 +1,7 @@
+# TODO : refactor scripts in sensible folders maybe? 
+dataset_utils, perceiver_stuff, av-hubert_stuff
+
+
 # Reproducing McGurk with PerceiverIO
 ## Using AutoEncoding :
 We managed to make a very reliable syllable classifier, that can with at least 98% classify syllables between [ba, da, ga], even with videos taken with selfie that have nothing to do with the training data.
