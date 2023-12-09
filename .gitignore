@@ -13,3 +13,6 @@ pcm_f32le
 
 # Processed dataset
 *.avi
+
+# macOS stupid Finder metadata
+**/.DS_Store
