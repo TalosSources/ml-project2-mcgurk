@@ -31,6 +31,11 @@ csv_files = glob.glob("./dataset/raw/timestamps/*.csv")
 # Get all mkv files
 mkv_files = glob.glob("./dataset/raw/videos/*.mkv")
 
+# Fix paths for Windows that thinks it's special
+for i in range(len(csv_files)):
+    csv_files[i] = str.replace(csv_files[i], '\\', '/')
+    mkv_files[i] = str.replace(mkv_files[i], '\\', '/')
+
 # Pair csv files with mkv videos of the same name
 csv_mkv_pairs = []
 for csv_file in csv_files:
@@ -65,3 +70,5 @@ for csv_file, mkv_file in tqdm(
         os.system(
             f"ffmpeg -hide_banner -loglevel error -y -ss {ts} -i {mkv_file} -frames:v 60 -vf scale=224:224 -c:v ffv1 ./dataset/train/{mkv_file.split('/')[-1].split('_')[0]}/{mkv_file.split('/')[-1].split('.')[0]}_{i+1}.avi"
         )
+
+print("Dataset created, you can now run the main notebook!")
