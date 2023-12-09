@@ -1,10 +1,11 @@
 import torch
 from tqdm import tqdm
 
+
 class LogisticRegression(torch.nn.Module):
     def __init__(self, input_dim, output_dim):
         super(LogisticRegression, self).__init__()
-        print(f"LogisticRegression: input_dim={input_dim}, output_dim={output_dim}")
+        # print(f"LogisticRegression: input_dim={input_dim}, output_dim={output_dim}") # DEBUG
         self.linear = torch.nn.Linear(input_dim, output_dim, bias=True)
 
     def forward(self, x):
@@ -20,19 +21,28 @@ class LogisticRegression(torch.nn.Module):
     """
 
     def train_log_reg(self, X, Y, epochs=200000, learning_rate=0.01):
+        # Define loss and optimizer
         criterion = torch.nn.CrossEntropyLoss()
-        optimizer = torch.optim.Adam(self.parameters(), lr=learning_rate)
+        #optimizer = torch.optim.Adam(self.parameters(), lr=learning_rate)
+        optimizer = torch.optim.SGD(self.parameters(), lr=learning_rate, nesterov=True, momentum=0.9)
 
         progress_bar = tqdm(range(epochs), desc=f"Training...", leave=False, position=0)
         for iter in progress_bar:
+            # Forward pass
             optimizer.zero_grad()
             outputs = self(X)
-            # if(outputs.size(1) == 1):
-            #    outputs = outputs.reshape(outputs.size(0))
-            loss = criterion(outputs, Y)
-            if iter % 5000 == 0:
-                progress_bar.set_description(f"Training... (loss: {loss})", refresh=False)
 
+            # Compute loss
+            loss = criterion(outputs, Y)
+
+            if iter % 5000 == 0:
+                # Print progress
+                progress_bar.set_description(
+                    f"Training... (loss: {loss})", refresh=False
+                )
+
+            # Backward pass
             loss.backward()
 
+            # Update parameters
             optimizer.step()
