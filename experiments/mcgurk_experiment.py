@@ -56,7 +56,7 @@ class McGurkExperiment:
         Returns a list of paths to McGurk videos samples.
         """
         return glob(f"dataset/mcgurk/{self.auditory}_{self.visual}_{self.mcgurk}/*.avi")
-    
+
     def to_str(self):
         """
         Returns a string representation of the experiment.

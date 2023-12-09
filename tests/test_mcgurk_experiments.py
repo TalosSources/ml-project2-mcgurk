@@ -1,5 +1,6 @@
 from experiments import McGurkExperiment
 
+
 def test_mcgurk_experiment_training_videos():
     """
     Tests the `McGurkExperiment.training_videos` method.

@@ -5,12 +5,6 @@ from experiments import McGurkExperiment
 from .utils import load_video_and_audio, autoencode_video, AUDIO_SAMPLES_PER_FRAME
 from .log_reg import LogisticRegression
 
-def sorted_videos_paths(videos_dir):
-    return [
-        os.path.join(videos_dir, video_path)
-        for video_path in sorted(os.listdir(videos_dir))
-    ]
-
 
 def obtain_latents_a_v_av(videos_paths, device):
     from .perceiver import PerceiverForMultimodalAutoencoding
@@ -66,13 +60,17 @@ def obtain_mc_gurk_last_latents(videos_paths, device, perceiver_model=None):
     # last_latent should be of shape (latent_size) = 512
     latents = []
 
-    for video_path in tqdm(videos_paths, desc="Inferring last hidden states of Perceiver latents from samples", leave=False):
+    for video_path in tqdm(
+        videos_paths,
+        desc="Inferring last hidden states of Perceiver latents from samples",
+        leave=False,
+    ):
         video, audio = load_video_and_audio(video_path=video_path)
 
         frames_taken = 16  # TODO : investigate this
         last_hidden_state = autoencode_video(
             video[None, :frames_taken],
-            audio[None, :(frames_taken*AUDIO_SAMPLES_PER_FRAME), 0:1],
+            audio[None, : (frames_taken * AUDIO_SAMPLES_PER_FRAME), 0:1],
             perceiver_model,
             device,
             SAMPLES_PER_PATCH=frames_taken,
@@ -82,20 +80,6 @@ def obtain_mc_gurk_last_latents(videos_paths, device, perceiver_model=None):
         latents.append(last_hidden_state)
 
     return torch.stack(latents)
-
-
-def read_labels(label_path="labels.txt"):
-    import csv
-
-    labels = []
-    with open(label_path, "r") as lf:
-        lines = lf.readlines()
-    C = int(lines[0])
-    for line in lines[1:]:
-        labels.append(int(line))
-
-    Y = torch.nn.functional.one_hot(torch.tensor(labels, dtype=int)).float()
-    return C, Y
 
 
 def training_pipeline(
@@ -123,7 +107,8 @@ def training_pipeline(
     else:
         # Else, load the videos and obtain the tensor of last hidden states of latents
         X = (
-            obtain_latents_a_v_av(videos_paths, device).to(device) if train_with_masks
+            obtain_latents_a_v_av(videos_paths, device).to(device)
+            if train_with_masks
             else obtain_mc_gurk_last_latents(videos_paths, device).to(device)
         )
 
@@ -131,8 +116,8 @@ def training_pipeline(
         if X_save_path is not None:
             torch.save(X, X_save_path)
 
-    N = X.size(0) # Number of samples
-    D = X.size(1) # Latent size from Perceiver
+    N = X.size(0)  # Number of samples
+    D = X.size(1)  # Latent size from Perceiver
 
     # Load labels
     Y = torch.nn.functional.one_hot(torch.tensor(labels, dtype=int)).float()
@@ -164,9 +149,13 @@ def training_pipeline(
 
     return classification_model, X, Y, accuracy
 
+
 class McGurkPerceiver:
     def __init__(self, experiment: McGurkExperiment):
         self.experiment = experiment
+
+    def name(self):
+        return f"Perceiver model for experiment {self.experiment.auditory} (auditory syllable) + {self.experiment.visual} (visual syllable) = {self.experiment.mcgurk} (expected McGurk syllable)"
 
     def train(self, epochs=100000, learning_rate=0.00002, train_with_masks=False):
         """
@@ -174,10 +163,17 @@ class McGurkPerceiver:
         """
 
         videos_paths, labels = self.experiment.training_videos()
-        
-        latents_path = f"cache/tensors/perceiver_latents_{self.experiment.to_str()}.pt" if not train_with_masks else f"cache/tensors/perceiver_latents_{self.experiment.to_str}_masked.pt" 
-        model_path = f"cache/models/perceiver_log_reg_{self.experiment.to_str()}.pt" if not train_with_masks else f"cache/models/perceiver_log_reg_{self.experiment.to_str}_masked.pt"
 
+        latents_path = (
+            f"cache/tensors/perceiver_latents_{self.experiment.to_str()}.pt"
+            if not train_with_masks
+            else f"cache/tensors/perceiver_latents_{self.experiment.to_str}_masked.pt"
+        )
+        model_path = (
+            f"cache/models/perceiver_log_reg_{self.experiment.to_str()}.pt"
+            if not train_with_masks
+            else f"cache/models/perceiver_log_reg_{self.experiment.to_str}_masked.pt"
+        )
 
         if os.path.exists(latents_path):
             # If the latents are already computed, load them from cache
@@ -188,7 +184,7 @@ class McGurkPerceiver:
                 epochs=epochs,
                 learning_rate=learning_rate,
                 model_save_path=model_path,
-                train_with_masks=train_with_masks
+                train_with_masks=train_with_masks,
             )
             return self.model, X, Y, accuracy
 
@@ -200,17 +196,18 @@ class McGurkPerceiver:
                 epochs=epochs,
                 learning_rate=learning_rate,
                 model_save_path=model_path,
-                train_with_masks=train_with_masks
+                train_with_masks=train_with_masks,
             )
             return self.model, X, Y, accuracy
-
 
     def test(self):
         videos_paths = self.experiment.mcgurk_videos()
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        X = obtain_mc_gurk_last_latents(videos_paths=videos_paths, device=device).to(device)
+        X = obtain_mc_gurk_last_latents(videos_paths=videos_paths, device=device).to(
+            device
+        )
         return self.model(X)
-    
+
     def clear_cache(self):
         """
         Clears the cache of the latents and the trained model
