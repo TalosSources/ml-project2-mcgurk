@@ -44,6 +44,10 @@ class McGurkExperiment:
         mcgurk = glob(f"dataset/train/{self.mcgurk}/*.avi")
         paths += mcgurk
 
+        # Fix paths for Windows that thinks it's special
+        for i in range(len(paths)):
+            paths[i] = str.replace(paths[i], '\\', '/')
+
         # Craft labels
         labels = np.concatenate(
             (np.zeros(len(auditory)), np.ones(len(visual)), 2.0 * np.ones(len(mcgurk)))

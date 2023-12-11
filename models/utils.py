@@ -86,11 +86,9 @@ def load_video_and_audio(index=0, video_path=None):
         video_names = list_ucf_videos()
         video_path = fetch_ucf_video(video_names[index])
 
-    os.system("rm cache/tmp/*")
-
     # Extract audio using FFMPEG and encode as pcm float wavfile (only format readable by scipy.io.wavfile).
     os.system(
-        f"""ffmpeg -hide_banner -loglevel error -i "{video_path}"  -c copy  -f wav -map 0:a cache/tmp/pcm_f32le -ar 48000 cache/tmp/audio.wav"""
+        f"""ffmpeg -y -hide_banner -loglevel error -i "{video_path}"  -c copy  -f wav -map 0:a cache/tmp/pcm_f32le -ar 48000 cache/tmp/audio.wav"""
     )
 
     sample_rate, audio = scipy.io.wavfile.read("cache/tmp/audio.wav")
@@ -102,8 +100,6 @@ def load_video_and_audio(index=0, video_path=None):
         )
 
     video = load_video(video_path)
-    # save_gif(video, path="before.gif")
-    # os.system("rm cache/tmp/*")
 
     return video, audio
 
