@@ -1,5 +1,6 @@
 # Python cache
 __pycache__
+.pytest_cache
 
 # Raw dataset
 *.zip
@@ -12,3 +13,6 @@ pcm_f32le
 
 # Processed dataset
 *.avi
+
+# macOS stupid Finder metadata
+**/.DS_Store
