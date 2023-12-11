@@ -1,6 +1,7 @@
 gdown         # To download the dataset
 transformers  # To use the PerceiverIO model
 tqdm          # To show progress bars
+ipywidgets    # To show progress bars
 torch         # PyTorch
 pytest        # Testing
 opencv-python # To load videos
