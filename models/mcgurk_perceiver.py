@@ -122,6 +122,8 @@ def training_pipeline(
     # Load labels
     Y = torch.nn.functional.one_hot(torch.tensor(labels, dtype=int)).float()
     Y = Y.to(device)
+    if train_with_masks:
+        Y = torch.cat((Y,Y,Y))
 
     # Train a logistic regression model on the last hidden states of latents
     C = int(labels.max()) + 1
@@ -167,12 +169,12 @@ class McGurkPerceiver:
         latents_path = (
             f"cache/tensors/perceiver_latents_{self.experiment.to_str()}.pt"
             if not train_with_masks
-            else f"cache/tensors/perceiver_latents_{self.experiment.to_str}_masked.pt"
+            else f"cache/tensors/perceiver_latents_{self.experiment.to_str()}_masked.pt"
         )
         model_path = (
             f"cache/models/perceiver_log_reg_{self.experiment.to_str()}.pt"
             if not train_with_masks
-            else f"cache/models/perceiver_log_reg_{self.experiment.to_str}_masked.pt"
+            else f"cache/models/perceiver_log_reg_{self.experiment.to_str()}_masked.pt"
         )
 
         if os.path.exists(latents_path):
@@ -203,9 +205,15 @@ class McGurkPerceiver:
     def test(self):
         videos_paths = self.experiment.mcgurk_videos()
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        X = obtain_mc_gurk_last_latents(videos_paths=videos_paths, device=device).to(
-            device
-        )
+
+        latents_path = f"cache/tensors/perceiver_latents_mcgurk_{self.experiment.to_str()}.pt"
+
+        if os.path.exists(latents_path):
+            X = torch.load(latents_path)
+        else:
+            X = obtain_mc_gurk_last_latents(videos_paths=videos_paths, device=device).to(device)
+            torch.save(X, latents_path)
+
         return self.model.predict(X)
 
     def clear_cache(self):
