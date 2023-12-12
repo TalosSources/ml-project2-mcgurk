@@ -17,7 +17,7 @@ We combined videos gas and audios bas to get ga+ba videos, and fed it to the tra
 using audio only, video only, and audiovisual training examples, the model can still learn a relatively good model. It strangely fails often with video and audio only, but almost never with a combination. When testing mcgurk, it very confidently again assigns it to the visual input. So, it shows a visual domination. The results would be more interesting if we had better accuracy, right now it's still not great with audio inputs only, so we have no strong reason to assume it prefers video, it may simply not be able to recognize audio inputs that well at all.
 However, interesting thing. When testing with ba+fa=va, we have this : showing only the fa video predicts fa with almost 100% probability, ba and va being at 0 or e-30 or so. But when adding the ba audio, the probabilities for ba and va become substantially higher, with va being higher than va and reaching 9 * e-03, which is about 1% probability. Not negligible at all, compared to e-30. So, the model was kind of nuged towards the mcgurk thing. It believes the mcgurk hypothesis more than the audio one, but less than the visual one. 
 More ideas to improve resutls :
-* use all or more of the latents instead of using their mean. We could compute K means, where K divides n_latentS=768, and use a flattened K * 512 vector as X feature. maybe there's more audio explanatory information to be found there.
+* use all or more of the latents instead of using their mean. We could compute K means, where K divides n_latentS=784, and use a flattened K * 512 vector as X feature. maybe there's more audio explanatory information to be found there.
 * 
 
 

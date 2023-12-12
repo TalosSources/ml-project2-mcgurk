@@ -1,15 +1,48 @@
-import mc_gurk_classification
+import os
+import pprint
+from models import mcgurk_perceiver
+import numpy as np
+import torch
 
-# To compute the X_tensors from videos using PerceiverIO, videos_paths should be specified, and X_save_path can be specified to cache the obtain tensors
-# To use a cached X_tensor, one should instead specify the X_cache_path,
+sp = 'dataset/train'
+auditory = 'ba'
+visual = 'ga'
+mcgurk = 'da'
 
-model, X, Y, accuracy = mc_gurk_classification.training_pipeline(
-    labels_path="dataset/labels/train_labels_a+v.txt",
-    videos_paths=mc_gurk_classification.sorted_videos_paths('dataset/train_sets/train_bafava'),
-    #X_cache_path="cache/tensors/X_bafava_a+av.pt",
-    epochs=100000,
-    learning_rate=0.00002,
-    model_save_path="cache/models/lr_bafava_a+av.pt",
-    # X_save_path='dataset/cached_tensors/X_bafava_a+v+av.pt')
+syllables = [auditory, visual, mcgurk]
+persons = ['ismail', 'jad', 'olena']
+p = len(persons)
+n = 2
+
+def obtain_n_first_videos(dir):
+    return sorted([os.path.join(dir, file) for file in os.listdir(dir)])[:n]
+
+videos_paths = []
+for s in syllables:
+    s_dir = os.path.join(sp, s)
+    s_paths = [os.path.join(s_dir, video_path) for video_path in os.listdir(s_dir)] # all videos paths for syllable s
+    for person in persons:
+        s_person_paths = [video_path for video_path in s_paths if person in video_path]
+        s_person_paths = sorted(s_person_paths)[:n]
+        videos_paths += s_person_paths
+
+pprint.pprint(videos_paths) # should be of size #syllable * #person * n = 9 * n
+
+labels = np.array([0 for _ in range(p*n)] + [1 for _ in range(p*n)] + [2 for _ in range(p*n)])
+
+pprint.pprint(labels)
+
+
+classification_model, X, Y, accuracy = mcgurk_perceiver.training_pipeline(
+    labels=labels,
+    X_cache_path=None,
+    videos_paths=videos_paths,
+    epochs=15000,
+    learning_rate=0.0001,
+    X_save_path=None,
+    device=None,
+    model_save_path=None,
+    train_with_masks=False,
 )
 
+# debug path : 'cache/tensors/X_debug.pt'

@@ -118,6 +118,17 @@ def average_latents(latents):
     after = torch.mean(latents, dim=1).reshape((512))
     return after
 
+def aggregate_latents(latents):
+    # expect a latent of shape (784, 512). we know 784 = 112 * 7
+    k = 7
+    l = int(784 / k)
+    print(f"shape:{latents.size()}, k={k}, l={l}")
+    latents = latents.reshape((784, 512))
+    tensors = []
+    for i in range(k):
+        tensors.append(torch.mean(latents[i*l:(i+1)*l], dim=0).reshape((512)))
+    return torch.cat(tensors).reshape((k * 512))
+
 
 def autoencode_video(
     images, audio, model, device, SAMPLES_PER_PATCH=16, output_reconstruction=False
@@ -154,7 +165,8 @@ def autoencode_video(
             )
 
         output = {k: v.cpu() for k, v in outputs.logits.items()}
-        last_hidden_state = average_latents(outputs.hidden_states[-1])
+        #last_hidden_state = average_latents(outputs.hidden_states[-1])
+        last_hidden_state = aggregate_latents(outputs.hidden_states[-1])
 
         if output_reconstruction:
             reconstruction["label"] = output["label"]
