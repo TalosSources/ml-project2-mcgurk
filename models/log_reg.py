@@ -51,4 +51,4 @@ class LogisticRegression(torch.nn.Module):
 
 
     def predict(self, X):
-        return(torch.nn.functional.softmax(self.linear(X))) 
+        return(torch.nn.functional.softmax(self.linear(X), dim=1)) 

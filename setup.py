@@ -19,7 +19,7 @@ with zipfile.ZipFile(output, "r") as zip_ref:
 # Remove the zip file
 import os
 
-os.remove(output)
+#os.remove(output)
 
 # Generate samples from the raw dataset
 # Pair csv files with mkv videos of the same name
@@ -67,8 +67,14 @@ for csv_file, mkv_file in tqdm(
         position=0,
         leave=False,
     ):
-        os.system(
-            f"ffmpeg -hide_banner -loglevel error -y -ss {ts} -i {mkv_file} -frames:v 60 -vf scale=224:224 -c:v ffv1 ./dataset/train/{mkv_file.split('/')[-1].split('_')[0]}/{mkv_file.split('/')[-1].split('.')[0]}_{i+1}.avi"
-        )
+        # Only the first 19 samples of each raw videos are used for training
+        if (i+1 > 19):
+            os.system(
+                f"ffmpeg -hide_banner -loglevel error -y -ss {ts} -i {mkv_file} -frames:v 60 -vf scale=224:224 -c:v ffv1 ./dataset/test/{mkv_file.split('/')[-1].split('_')[0]}/{mkv_file.split('/')[-1].split('.')[0]}_{i+1}.avi"
+            )
+        else:
+            os.system(
+                f"ffmpeg -hide_banner -loglevel error -y -ss {ts} -i {mkv_file} -frames:v 60 -vf scale=224:224 -c:v ffv1 ./dataset/train/{mkv_file.split('/')[-1].split('_')[0]}/{mkv_file.split('/')[-1].split('.')[0]}_{i+1}.avi"
+            )
 
 print("Dataset created, you can now run the main notebook!")

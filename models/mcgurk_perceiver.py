@@ -141,10 +141,10 @@ def training_pipeline(
     Y_labels = torch.argmax(Y, dim=1)
 
     correct = predicted_labels == Y_labels
-    print("Wrongly classified videos:")
-    for i in range(len(correct)):
-        if correct[i] == False:
-            print(f"{videos_paths[i]} : {predictions[i]}")
+    #print("Wrongly classified videos:")
+    #for i in range(len(correct)):
+    #    if correct[i] == False:
+    #        print(f"{videos_paths[i]} : {predictions[i]}")
     accuracy = correct.sum() / N
 
     print(f"Training accuracy: {accuracy * 100}%")
