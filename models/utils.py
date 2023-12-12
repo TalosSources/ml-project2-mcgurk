@@ -166,7 +166,7 @@ def autoencode_video(
 
         output = {k: v.cpu() for k, v in outputs.logits.items()}
         #last_hidden_state = average_latents(outputs.hidden_states[-1])
-        last_hidden_state = aggregate_latents(outputs.hidden_states[-1])
+        last_hidden_state = average_latents(outputs.hidden_states[-1])
 
         if output_reconstruction:
             reconstruction["label"] = output["label"]
