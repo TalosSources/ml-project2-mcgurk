@@ -86,14 +86,12 @@ def load_video_and_audio(index=0, video_path=None):
         video_names = list_ucf_videos()
         video_path = fetch_ucf_video(video_names[index])
 
-    os.system("rm stuff/ffmpeg_tmp/*")
-
     # Extract audio using FFMPEG and encode as pcm float wavfile (only format readable by scipy.io.wavfile).
     os.system(
-        f"""ffmpeg -i "{video_path}"  -c copy  -f wav -map 0:a stuff/ffmpeg_tmp/pcm_f32le -ar 48000 stuff/ffmpeg_tmp/before.wav"""
-    )  # TODO : Not that
+        f"""ffmpeg -y -hide_banner -loglevel error -i "{video_path}"  -c copy  -f wav -map 0:a cache/tmp/pcm_f32le -ar 48000 cache/tmp/audio.wav"""
+    )
 
-    sample_rate, audio = scipy.io.wavfile.read("stuff/ffmpeg_tmp/before.wav")
+    sample_rate, audio = scipy.io.wavfile.read("cache/tmp/audio.wav")
     if audio.dtype == np.int16:
         audio = audio.astype(np.float32) / 2**15
     elif audio.dtype != np.float32:
@@ -102,8 +100,6 @@ def load_video_and_audio(index=0, video_path=None):
         )
 
     video = load_video(video_path)
-    # save_gif(video, path="before.gif")
-    os.system("rm stuff/ffmpeg_tmp/*")
 
     return video, audio
 
@@ -135,7 +131,7 @@ def autoencode_video(
 
     nchunks = 128
     reconstruction = {}
-    for chunk_idx in tqdm(range(nchunks if output_reconstruction else 1)):
+    for chunk_idx in tqdm(range(nchunks if output_reconstruction else 1), leave=False):
         image_chunk_size = np.prod(images.shape[1:-1]) // nchunks
         audio_chunk_size = audio.shape[1] // SAMPLES_PER_PATCH // nchunks
         subsampling = {

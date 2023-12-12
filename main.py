@@ -12,3 +12,4 @@ model, X, Y, accuracy = mc_gurk_classification.training_pipeline(
     model_save_path="cache/models/lr_bafava_a+av.pt",
     # X_save_path='dataset/cached_tensors/X_bafava_a+v+av.pt')
 )
+
