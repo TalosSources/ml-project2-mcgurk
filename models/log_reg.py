@@ -12,8 +12,7 @@ class LogisticRegression(torch.nn.Module):
             self.linear.weight.zero_()
 
     def forward(self, x):
-        outputs = torch.softmax(self.linear(x), dim=-1)
-        return outputs
+        return self.linear(x)
 
     """
     @params :
@@ -49,3 +48,7 @@ class LogisticRegression(torch.nn.Module):
 
             # Update parameters
             optimizer.step()
+
+
+    def predict(self, X):
+        return(torch.nn.functional.softmax(self.linear(X))) 

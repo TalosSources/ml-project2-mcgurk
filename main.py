@@ -2,7 +2,6 @@ import os
 import pprint
 from models import mcgurk_perceiver
 import numpy as np
-import torch
 
 sp = 'dataset/train'
 auditory = 'ba'
@@ -12,7 +11,7 @@ mcgurk = 'da'
 syllables = [auditory, visual, mcgurk]
 persons = ['ismail', 'jad', 'olena']
 p = len(persons)
-n = 2
+n = 20
 
 def obtain_n_first_videos(dir):
     return sorted([os.path.join(dir, file) for file in os.listdir(dir)])[:n]
@@ -35,9 +34,9 @@ pprint.pprint(labels)
 
 classification_model, X, Y, accuracy = mcgurk_perceiver.training_pipeline(
     labels=labels,
-    X_cache_path=None,
+    X_cache_path='cache/tensors/X_debug.pt',
     videos_paths=videos_paths,
-    epochs=15000,
+    epochs=10000,
     learning_rate=0.0001,
     X_save_path=None,
     device=None,

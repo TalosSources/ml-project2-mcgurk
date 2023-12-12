@@ -49,7 +49,7 @@ def obtain_latents_a_v_av(videos_paths, device):
 
 def obtain_mc_gurk_last_latents(videos_paths, device, perceiver_model=None):
     if perceiver_model is None:
-        from .perceiver import PerceiverForMultimodalAutoencoding
+        from transformers import PerceiverForMultimodalAutoencoding
 
         perceiver_model = PerceiverForMultimodalAutoencoding.from_pretrained(
             "deepmind/multimodal-perceiver", low_cpu_mem_usage=False
@@ -133,7 +133,7 @@ def training_pipeline(
         torch.save(classification_model, model_save_path)
 
     # Compute the accuracy of the trained model
-    predictions = classification_model(X)  # size = (N, 3)
+    predictions = classification_model.predict(X)  # size = (N, 3)
 
     predicted_labels = torch.argmax(predictions, dim=1)
     Y_labels = torch.argmax(Y, dim=1)
@@ -206,7 +206,7 @@ class McGurkPerceiver:
         X = obtain_mc_gurk_last_latents(videos_paths=videos_paths, device=device).to(
             device
         )
-        return self.model(X)
+        return self.model.predict(X)
 
     def clear_cache(self):
         """
