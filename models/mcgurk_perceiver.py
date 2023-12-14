@@ -4,6 +4,7 @@ from tqdm import tqdm
 from experiments import McGurkExperiment
 from .utils import load_video_and_audio, autoencode_video, AUDIO_SAMPLES_PER_FRAME
 from .log_reg import LogisticRegression
+import numpy as np
 
 
 def obtain_latents_a_v_av(videos_paths, device):
@@ -217,6 +218,10 @@ class McGurkPerceiver:
         return self.model.predict(X)
 
     def test(self, test_with_masks=False):
+        """
+        return: If we test with mask, we return 3 floats : a, v, a+v correct percentages
+        Else, we return 1 float, representing correct percentage.
+        """
         videos_paths, labels = self.experiment.testing_videos()
         device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -236,16 +241,36 @@ class McGurkPerceiver:
             )
             torch.save(X, latents_path)
 
-        Y = torch.tensor(labels, dtype=int).to(device)
+        # dimension constants
+        C = 3
+
+        # labels
+        labels = torch.tensor(labels, dtype=int).to(device)
+        N = labels.size(0)
         if test_with_masks:
-            Y = torch.cat((Y,Y,Y))
+            labels = torch.cat((labels, labels, labels))
 
+        # predictions
         predictions = self.model.predict(X)
-        predicted_labels = predictions.argmax(dim=1)
 
-        accuracy = (predicted_labels==Y).sum() / predicted_labels.size(0)
+        # we only test auditory and visual syllables
+        test_mask = torch.logical_or(labels==0, labels==1)
+        labels = labels[test_mask]
+        predictions = predictions[test_mask]
 
-        return predictions, accuracy
+        correct_confidences = predictions[labels] # this is a N (or 3 * N) long array of confidence on the ground truth label prediction. Should be all close to 1.
+        mcgurk_confidences = predictions[:, 2]
+
+        if test_with_masks:
+            # UNDEFINED FOR NOW
+            #average_a = torch.mean(correct_confidence[:N])
+            #average_v = torch.mean(correct_confidence[N:2*N])
+            #average_av = torch.mean(correct_confidence[2*N:])
+            return None
+        else:
+
+            return torch.mean(correct_confidences), torch.mean(mcgurk_confidences)
+
 
 
     def clear_cache(self):
