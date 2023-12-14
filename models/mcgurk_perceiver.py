@@ -202,7 +202,7 @@ class McGurkPerceiver:
             )
             return self.model, X, Y, accuracy
 
-    def test(self):
+    def test_mcgurk(self):
         videos_paths = self.experiment.mcgurk_videos()
         device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -215,6 +215,38 @@ class McGurkPerceiver:
             torch.save(X, latents_path)
 
         return self.model.predict(X)
+
+    def test(self, test_with_masks=False):
+        videos_paths, labels = self.experiment.testing_videos()
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        latents_path = (
+            f"cache/tensors/perceiver_latents_{self.experiment.to_str()}_test.pt"
+            if not test_with_masks
+            else f"cache/tensors/perceiver_latents_{self.experiment.to_str()}_masked_test.pt"
+        )
+
+        if os.path.exists(latents_path):
+            X = torch.load(latents_path)
+        else: 
+            X = (
+                obtain_latents_a_v_av(videos_paths=videos_paths, device=device)
+                if test_with_masks
+                else obtain_mc_gurk_last_latents(videos_paths=videos_paths, device=device)
+            )
+            torch.save(X, latents_path)
+
+        Y = torch.tensor(labels, dtype=int).to(device)
+        if test_with_masks:
+            Y = torch.cat((Y,Y,Y))
+
+        predictions = self.model.predict(X)
+        predicted_labels = predictions.argmax(dim=1)
+
+        accuracy = (predicted_labels==Y).sum() / predicted_labels.size(0)
+
+        return predictions, accuracy
+
 
     def clear_cache(self):
         """

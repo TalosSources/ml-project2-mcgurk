@@ -20,7 +20,7 @@ class McGurkExperiment:
         self.visual = visual
         self.mcgurk = mcgurk
 
-    def training_videos(self):
+    def training_videos(self): # maybe sorted globs? to make problems identifiable
         """
         Returns a tuple of the form (`paths`, `labels`) where:
         - `paths` is a list of paths to training videos samples
@@ -42,6 +42,41 @@ class McGurkExperiment:
         paths += visual
         # Fetch expected McGurk syllabe samples
         mcgurk = glob(f"dataset/train/{self.mcgurk}/*.avi")
+        paths += mcgurk
+
+        # Fix paths for Windows that thinks it's special
+        for i in range(len(paths)):
+            paths[i] = str.replace(paths[i], '\\', '/')
+
+        # Craft labels
+        labels = np.concatenate(
+            (np.zeros(len(auditory)), np.ones(len(visual)), 2.0 * np.ones(len(mcgurk)))
+        )
+
+        return (paths, labels)
+    
+    def testing_videos(self): # Note : could be merged with training_videos, but not a priority
+        """
+        Returns a tuple of the form (`paths`, `labels`) where:
+        - `paths` is a list of paths to testing videos samples
+        - `labels` is a list of labels for each video sample
+
+        The labels are as follows:
+
+        - `0`: Auditory syllabe
+        - `1`: Visual syllabe
+        - `2`: McGurk expected syllabe
+
+        The paths are sorted by label.
+        """
+        paths = []
+        # Fetch auditory syllabe samples
+        auditory = glob(f"dataset/test/{self.auditory}/*.avi")
+        paths += auditory
+        visual = glob(f"dataset/test/{self.visual}/*.avi")
+        paths += visual
+        # Fetch expected McGurk syllabe samples
+        mcgurk = glob(f"dataset/test/{self.mcgurk}/*.avi")
         paths += mcgurk
 
         # Fix paths for Windows that thinks it's special
