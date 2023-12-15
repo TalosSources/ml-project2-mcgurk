@@ -241,9 +241,6 @@ class McGurkPerceiver:
             )
             torch.save(X, latents_path)
 
-        # dimension constants
-        C = 3
-
         # labels
         labels = torch.tensor(labels, dtype=int).to(device)
         if test_with_masks:
@@ -262,6 +259,9 @@ class McGurkPerceiver:
         correct_confidences = predictions[torch.arange(N),labels] # this is a N (or 3 * N) long array of confidence on the ground truth label prediction. Should be all close to 1.
         mcgurk_confidences = predictions[:, 2]
 
+        A_predictions = predictions[labels==0]
+        V_predictions = predictions[labels==1]
+
 
         if test_with_masks:
             # UNDEFINED FOR NOW
@@ -270,8 +270,7 @@ class McGurkPerceiver:
             #average_av = torch.mean(correct_confidence[2*N:])
             return None
         else:
-
-            return torch.mean(correct_confidences), torch.mean(mcgurk_confidences)
+            return A_predictions, V_predictions
 
 
 

@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from pprint import pprint
 
 
 def plot_perceiver_experiment(experiments, results, path=None):
@@ -18,7 +19,34 @@ def plot_perceiver_experiment(experiments, results, path=None):
     -> we do one subplot per experiment. each subplot contains therefore 3x3 bars.
     it's very similar to the av-hubert ones. we could re-use code and make sur to share visual information
     """
-    results_bgd, results_bfv = results
+    # each result is an array of 3 numpy arrays, each of size Ni,3  and Ni can be different
+
+    n_plots = len(experiments)
+
+    pprint(results)
+        
+
+    means = np.array([[np.mean(a, axis=0) for a in r] for r in results])
+    stds = np.array([[np.std(a, axis=0) for a in r] for r in results])
+
+    print(f"ms : {means.shape}, ss : {stds.shape}")
+
+    # Creating the figure and the 3 subplots
+    fig, axes = plt.subplots(1, 3, figsize=(27, 5))
+
+    # Plotting the bar charts with error bars
+    for i in range(3):
+        if i > 0:
+            break
+        axes[i].bar(np.arange(1, 10), means[i].flatten(), yerr=stds[i].flatten(), capsize=5)
+        axes[i].set_title(f'Subplot {i+1}')
+        axes[i].set_xlabel('Bar Number')
+        axes[i].set_ylabel('Value')
+        axes[i].set_xticks(np.arange(1, 10))
+
+    # Adjusting layout
+    plt.tight_layout()
+    plt.show()
     
 
 
@@ -51,7 +79,8 @@ def plot_mgurk_confidence_increase():
     # maybe, only if it's information rich
     ...
 
-plot_mcgurk_confidences()
+
+
 
 
 # TODO: Plot the average confidence scores for each normal sample of each experiment -> If possible, with test set
