@@ -23,61 +23,47 @@ def plot_perceiver_experiment(experiments, results, path=None):
 
     n_plots = len(experiments)
 
-    pprint(results)
-        
-
-    means = np.array([[np.mean(a, axis=0) for a in r] for r in results])
+    means = np.array([[np.mean(a, axis=0) for a in r] for r in results]) # both shape 3, 3, 3
     stds = np.array([[np.std(a, axis=0) for a in r] for r in results])
 
-    print(f"ms : {means.shape}, ss : {stds.shape}")
-
     # Creating the figure and the 3 subplots
-    fig, axes = plt.subplots(1, 3, figsize=(27, 5))
+    fig, axes = plt.subplots(1, 3, figsize=(16, 5), constrained_layout=True)
+
+    width = 0.2
+    spacing = 0.1
+    colors = {'A' : 'blue', 'V' : 'yellow', 'A+V' : 'green'}
+    labels = ['A', 'V', 'A+V']
+    legend_labels = ['Audio', 'Visual', 'McGurk']
 
     # Plotting the bar charts with error bars
     for i in range(3):
-        if i > 0:
-            break
-        axes[i].bar(np.arange(1, 10), means[i].flatten(), yerr=stds[i].flatten(), capsize=5)
-        axes[i].set_title(f'Subplot {i+1}')
-        axes[i].set_xlabel('Bar Number')
-        axes[i].set_ylabel('Value')
-        axes[i].set_xticks(np.arange(1, 10))
+        bars = []
+        for j in range(3):
+            bar =  axes[i].bar(np.arange(3) + (width+spacing)*j, means[i, :, j], yerr=stds[i, :, j], width=width, color=colors[labels[j]])
+            bars.append(bar)
 
+        axes[i].set_xticks(np.arange(3) + spacing+width)
+        axes[i].set_xticklabels(labels)
+        for ticklabel, tickcolor in zip(axes[i].get_xticklabels(), [colors[label] for label in labels]):
+            ticklabel.set_color(tickcolor)
+
+        axes[i].set_xlabel('Input video')
+        axes[i].set_ylabel('Prediction averages')
+        axes[i].legend(bars, legend_labels, title='Predicted phonemes', loc='upper right')
+        axes[i].set_yscale('log')
+
+    axes[0].set_title(f'Ba+Ga=Da Experiment')
+    axes[1].set_title(f'Ba+Fa=Va Experiment')
+    axes[2].set_title(f'Ga+Ba=Bga Experiment')
+    
     # Adjusting layout
     plt.tight_layout()
-    plt.show()
-    
 
+    if path is not None:
+        plt.savefig(path)
+    else:
+        plt.show()
 
-def plot_mcgurk_confidences():
-    # Plot the average confidence scores for each sound of each experiment
-    fig, ax = plt.subplots(figsize=(6, 4), constrained_layout=True)
-
-    # Define the axises labels and plot title
-    #ax.set_title('Average confidence scores per syllable for each experiment')
-    ax.set_xlabel('Experiment')
-    ax.set_ylabel('Average confidence score per syllable')
-
-    # Define bars for each type of syllables
-    ind = np.arange(len(experiments))  # the x locations for the groups
-    width = 0.3
-    plt.bar(ind - width, model_predictions_avg[:,0], width, label='Auditory syllable')
-    plt.bar(ind, model_predictions_avg[:,1], width, label='Visual syllable')
-    plt.bar(ind + width, model_predictions_avg[:,2], width, label='McGurk effect syllable')
-
-    plt.xticks(ind + width / 2, (experiments[0].to_str(), experiments[1].to_str(), experiments[2].to_str()))
-    plt.legend(bbox_to_anchor=(1.1, 0.5), loc='center left')
-    plt.yscale('log')
-    plt.show()
-
-def plot_test_confidences():
-    # certifies the model is potent at recognizing syllables
-    ...
-
-def plot_mgurk_confidence_increase():
-    # maybe, only if it's information rich
-    ...
 
 
 

@@ -248,29 +248,15 @@ class McGurkPerceiver:
 
         # predictions
         predictions = self.model.predict(X)
+        print(f"videos_paths = {videos_paths}")
+        print(f"labels = {labels}")
+        print(f"predictions : {predictions}")
 
-
-        # we only test auditory and visual syllables
-        test_mask = torch.logical_or(labels==0, labels==1)
-        labels = labels[test_mask]
-        N = labels.size(0)
-        predictions = predictions[test_mask]
-
-        correct_confidences = predictions[torch.arange(N),labels] # this is a N (or 3 * N) long array of confidence on the ground truth label prediction. Should be all close to 1.
-        mcgurk_confidences = predictions[:, 2]
-
+        N = predictions.size(0)
         A_predictions = predictions[labels==0]
         V_predictions = predictions[labels==1]
 
-
-        if test_with_masks:
-            # UNDEFINED FOR NOW
-            #average_a = torch.mean(correct_confidence[:N])
-            #average_v = torch.mean(correct_confidence[N:2*N])
-            #average_av = torch.mean(correct_confidence[2*N:])
-            return None
-        else:
-            return A_predictions, V_predictions
+        return A_predictions, V_predictions
 
 
 
