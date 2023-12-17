@@ -6,13 +6,13 @@ class LogisticRegression(torch.nn.Module):
     def __init__(self, input_dim, output_dim):
         super(LogisticRegression, self).__init__()
         # print(f"LogisticRegression: input_dim={input_dim}, output_dim={output_dim}") # DEBUG
-        self.linear = torch.nn.Linear(input_dim, output_dim, bias=True)
-        with torch.no_grad():
-            self.linear.bias.zero_()
-            self.linear.weight.zero_()
+        self.linear_1 = torch.nn.Linear(input_dim, 200, bias=True)
+        self.linear_2 = torch.nn.Linear(200, 200, bias=True)
+        self.linear_3 = torch.nn.Linear(200, output_dim)
+
 
     def forward(self, x):
-        return self.linear(x)
+        return self.linear_3(torch.nn.functional.relu(self.linear_2(torch.nn.functional.relu(self.linear_1(x)))))
 
     """
     @params :
@@ -49,6 +49,9 @@ class LogisticRegression(torch.nn.Module):
             # Update parameters
             optimizer.step()
 
+        final_loss = criterion(self(X), Y)
+        print(f"Final loss : {final_loss}")
+
 
     def predict(self, X):
-        return(torch.nn.functional.softmax(self.linear(X), dim=1)) 
+        return(torch.nn.functional.softmax(self.forward(X), dim=1)) 

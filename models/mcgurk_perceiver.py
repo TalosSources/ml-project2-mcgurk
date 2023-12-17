@@ -43,7 +43,7 @@ def obtain_latents_a_v_av(videos_paths, device):
     )
 
     X_a_v_av = torch.cat((X_a, X_v, X_av))
-    assert X_a_v_av.size() == (3 * len(videos_paths), 512)
+    #assert X_a_v_av.size() == (3 * len(videos_paths), 512)
 
     return X_a_v_av
 
@@ -243,6 +243,7 @@ class McGurkPerceiver:
 
         # labels
         labels = torch.tensor(labels, dtype=int).to(device)
+        N = labels.size(0)
         if test_with_masks:
             labels = torch.cat((labels, labels, labels))
 
@@ -251,6 +252,18 @@ class McGurkPerceiver:
         print(f"videos_paths = {videos_paths}")
         print(f"labels = {labels}")
         print(f"predictions : {predictions}")
+
+        correct = predictions.argmax(dim=1) == labels
+        if test_with_masks:
+            accuracy_A = correct[:N].sum() / N
+            accuracy_V = correct[N:2*N].sum() / N
+            accuracy_AV = correct[2*N:3*N].sum() / N
+            print(f"test accuracy A = {accuracy_A}")
+            print(f"test accuracy V = {accuracy_V}")
+            print(f"test accuracy AV = {accuracy_AV}")
+        else:
+            accuracy = correct / N
+            print(f"test accuracy : {accuracy}")
 
         N = predictions.size(0)
         A_predictions = predictions[labels==0]

@@ -119,10 +119,9 @@ def average_latents(latents):
     return after
 
 def aggregate_latents(latents):
-    # expect a latent of shape (784, 512). we know 784 = 112 * 7
-    k = 7
+    # expect a latent of shape (784, 512). we know 784 = 112 * 7 = 56 * 14
+    k = 14
     l = int(784 / k)
-    print(f"shape:{latents.size()}, k={k}, l={l}")
     latents = latents.reshape((784, 512))
     tensors = []
     for i in range(k):
@@ -166,7 +165,7 @@ def autoencode_video(
 
         output = {k: v.cpu() for k, v in outputs.logits.items()}
         #last_hidden_state = average_latents(outputs.hidden_states[-1])
-        last_hidden_state = average_latents(outputs.hidden_states[-1])
+        last_hidden_state = aggregate_latents(outputs.hidden_states[-1])
 
         if output_reconstruction:
             reconstruction["label"] = output["label"]

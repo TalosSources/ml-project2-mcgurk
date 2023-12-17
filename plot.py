@@ -2,6 +2,19 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pprint import pprint
 
+def mean_and_std(x, axis=0): # x.shape (Ni, 3)
+    N = x.shape[0] 
+    g_mean = np.exp(np.log(x).mean(axis=axis)) # should be shape 3
+    g_std =  np.sqrt((np.log(x / g_mean)**2).sum(axis=axis) / N)
+    mean = x.mean(axis=axis)
+    std = x.std(axis=axis)
+    median = np.median(x, axis=0)
+    mad = np.median(np.abs(x - median), axis=0)
+    #return g_mean, g_std
+    #return mean, std
+    #return mean, std / mean # relative error
+    return median, mad
+
 
 def plot_perceiver_experiment(experiments, results, path=None):
     """
@@ -23,15 +36,20 @@ def plot_perceiver_experiment(experiments, results, path=None):
 
     n_plots = len(experiments)
 
-    means = np.array([[np.mean(a, axis=0) for a in r] for r in results]) # both shape 3, 3, 3
-    stds = np.array([[np.std(a, axis=0) for a in r] for r in results])
+    #means = np.array([[np.mean(a, axis=0) for a in r] for r in results]) # both shape 3, 3, 3
+    #stds = np.array([[np.std(a, axis=0) for a in r] for r in results])
+
+    means_and_stds = np.array([[mean_and_std(a, axis=0) for a in r] for r in results]) # shape 3, 3, 2, 3
 
     # Creating the figure and the 3 subplots
-    fig, axes = plt.subplots(1, 3, figsize=(16, 5), constrained_layout=True)
+    fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(16, 5), constrained_layout=False)
+
+    fig.supxlabel('Input Video content')
+    fig.supylabel('Mean regression confidence')
 
     width = 0.2
-    spacing = 0.1
-    colors = {'A' : 'blue', 'V' : 'yellow', 'A+V' : 'green'}
+    spacing = 0.05
+    colors = {'A' : 'blue', 'V' : 'orange', 'A+V' : 'green'}
     labels = ['A', 'V', 'A+V']
     legend_labels = ['Audio', 'Visual', 'McGurk']
 
@@ -39,7 +57,11 @@ def plot_perceiver_experiment(experiments, results, path=None):
     for i in range(3):
         bars = []
         for j in range(3):
-            bar =  axes[i].bar(np.arange(3) + (width+spacing)*j, means[i, :, j], yerr=stds[i, :, j], width=width, color=colors[labels[j]])
+            r = means_and_stds[i, :, :, j]
+            mean = r[:, 0]
+            std = r[:, 1]
+            print(f"mean = {mean}, std = {std}")
+            bar =  axes[i].bar(np.arange(3) + (width+spacing)*j, mean, yerr=std, width=width, color=colors[labels[j]])
             bars.append(bar)
 
         axes[i].set_xticks(np.arange(3) + spacing+width)
@@ -47,22 +69,22 @@ def plot_perceiver_experiment(experiments, results, path=None):
         for ticklabel, tickcolor in zip(axes[i].get_xticklabels(), [colors[label] for label in labels]):
             ticklabel.set_color(tickcolor)
 
-        axes[i].set_xlabel('Input video')
-        axes[i].set_ylabel('Prediction averages')
-        axes[i].legend(bars, legend_labels, title='Predicted phonemes', loc='upper right')
+        #axes[i].set_xlabel('Input video')
+        #axes[i].set_ylabel('Prediction averages')
         axes[i].set_yscale('log')
 
     axes[0].set_title(f'Ba+Ga=Da Experiment')
     axes[1].set_title(f'Ba+Fa=Va Experiment')
     axes[2].set_title(f'Ga+Ba=Bga Experiment')
+    plt.legend(bars, legend_labels, bbox_to_anchor=(1.05, 1.0), title='Predicted phonemes')
     
     # Adjusting layout
-    plt.tight_layout()
+    #plt.tight_layout()
 
     if path is not None:
-        plt.savefig(path)
-    else:
-        plt.show()
+        plt.savefig(path, format='jpg', transparent=False)
+    #else:
+    #    plt.show()
 
 
 
