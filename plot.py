@@ -85,6 +85,36 @@ def plot_perceiver_experiment(experiments, results, path=None):
         plt.savefig(path, format='jpg', transparent=False)
     #else:
     #    plt.show()
+        
+
+def plot_human_control(results, path=None, dpi='600'):
+    """
+    Results is a numpy array of shape (5,), with ratios of samples working on us for
+    ba_ga_da, ba_fa_va, ga_ba_bga, words_BGD and words_BFV experiments
+    """
+    fig, ax = plt.subplots(nrows=1, ncols=1,figsize=(5,3), constrained_layout=True)
+
+    #ax.xlabel ...  
+
+    width = 0.6
+    spacing = 0.05
+
+    # Plotting the bar charts with error bars
+    bar =  ax.bar(np.arange(5), results, width=width, color='Blue')
+
+    ax.set_xticks(np.arange(5))
+    ax.set_xticklabels(['BaGaDa', 'BaFaVa', 'GaBaBga', 'words_BGD', 'words_BFV'])
+
+    ax.set_xlabel('Experiment')
+    ax.set_ylabel('Ratio of apparent McGurk Effect')
+
+
+    
+    # Adjusting layout
+    plt.tight_layout()
+
+    if path is not None:
+        plt.savefig(path, format='jpg', transparent=False, dpi=dpi)
 
 
 
