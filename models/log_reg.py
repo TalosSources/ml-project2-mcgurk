@@ -5,14 +5,11 @@ from tqdm import tqdm
 class LogisticRegression(torch.nn.Module):
     def __init__(self, input_dim, output_dim):
         super(LogisticRegression, self).__init__()
-        # print(f"LogisticRegression: input_dim={input_dim}, output_dim={output_dim}") # DEBUG
-        self.linear_1 = torch.nn.Linear(input_dim, 200, bias=True)
-        self.linear_2 = torch.nn.Linear(200, 200, bias=True)
-        self.linear_3 = torch.nn.Linear(200, output_dim)
+        self.linear = torch.nn.Linear(input_dim, output_dim, bias=True)
 
 
     def forward(self, x):
-        return self.linear_3(torch.nn.functional.relu(self.linear_2(torch.nn.functional.relu(self.linear_1(x)))))
+        return self.linear(x)
 
     """
     @params :
