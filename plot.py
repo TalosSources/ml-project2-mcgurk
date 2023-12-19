@@ -95,6 +95,7 @@ def plot_human_control(results, path=None, dpi='600'):
     fig, ax = plt.subplots(nrows=1, ncols=1,figsize=(5,3), constrained_layout=True)
 
     #ax.xlabel ...  
+    plt.ylim([0, 1])
 
     width = 0.6
     spacing = 0.05
@@ -103,10 +104,10 @@ def plot_human_control(results, path=None, dpi='600'):
     bar =  ax.bar(np.arange(5), results, width=width, color='Blue')
 
     ax.set_xticks(np.arange(5))
-    ax.set_xticklabels(['BaGaDa', 'BaFaVa', 'GaBaBga', 'words_BGD', 'words_BFV'])
+    ax.set_xticklabels(['Ba+Ga=Da', 'Ba+Fa=Va', 'Ga+Ba=Bga', 'B..+G..=D..', 'B..+F..=V..'], size='small')
 
-    ax.set_xlabel('Experiment')
-    ax.set_ylabel('Ratio of apparent McGurk Effect')
+    ax.set_xlabel('McGurk Experiment', size='medium', fontweight='bold')
+    ax.set_ylabel('Ratio of apparent McGurk Effect', size='medium', fontweight='bold')
 
 
     
