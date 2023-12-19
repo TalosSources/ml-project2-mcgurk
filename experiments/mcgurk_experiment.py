@@ -55,7 +55,7 @@ class McGurkExperiment:
 
         return (paths, labels)
     
-    def testing_videos(self): # Note : could be merged with training_videos, but not a priority
+    def testing_videos(self):
         """
         Returns a tuple of the form (`paths`, `labels`) where:
         - `paths` is a list of paths to testing videos samples

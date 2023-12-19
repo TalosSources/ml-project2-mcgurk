@@ -43,7 +43,6 @@ def obtain_latents_a_v_av(videos_paths, device):
     )
 
     X_a_v_av = torch.cat((X_a, X_v, X_av))
-    #assert X_a_v_av.size() == (3 * len(videos_paths), 512)
 
     return X_a_v_av
 
@@ -57,8 +56,6 @@ def obtain_mc_gurk_last_latents(videos_paths, device, perceiver_model=None):
         )
         perceiver_model.to(device)
 
-    # big last_latents array X that will contain 128 video_paths.length latents, one for each video
-    # last_latent should be of shape (latent_size) = 512
     latents = []
 
     for video_path in tqdm(
@@ -142,10 +139,6 @@ def training_pipeline(
     Y_labels = torch.argmax(Y, dim=1)
 
     correct = predicted_labels == Y_labels
-    #print("Wrongly classified videos:")
-    #for i in range(len(correct)):
-    #    if correct[i] == False:
-    #        print(f"{videos_paths[i]} : {predictions[i]}")
     accuracy = correct.sum() / N
 
     print(f"Training accuracy: {accuracy * 100}%")
@@ -249,9 +242,6 @@ class McGurkPerceiver:
 
         # predictions
         predictions = self.model.predict(X)
-        print(f"videos_paths = {videos_paths}")
-        print(f"labels = {labels}")
-        print(f"predictions : {predictions}")
 
         correct = predictions.argmax(dim=1) == labels
         if test_with_masks:

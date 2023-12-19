@@ -27,3 +27,6 @@
 ### Getting the dataset and processing it
 
 - Run `setup.py`, which takes care of downloading the dataset and processing it to populate the dataset folder with the final training samples (in `dataset/train`).
+
+### Running the Perceiver Mcgurk experiment
+- Run the main.ipynb notebook
